@@ -697,11 +697,11 @@ public:
 
         consensus.nMinRCTOutputDepth = 12;
 
-        pchMessageStart[0] = 0x08;
+        pchMessageStart[0] = 0x0a;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x05;
         pchMessageStart[3] = 0x0b;
-        nDefaultPort = 51938;
+        nDefaultPort = 51958;
         nBIP44ID = 0x80000001;
 
         nModifierInterval = 10 * 60;    // 10 minutes
@@ -829,11 +829,11 @@ public:
 
         consensus.nMinRCTOutputDepth = 1;
 
-        pchMessageStart[0] = 0x09;
+        pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x12;
         pchMessageStart[2] = 0x06;
         pchMessageStart[3] = 0x0c;
-        nDefaultPort = 11938;
+        nDefaultPort = 51978;
         nBIP44ID = 0x80000001;
 
 
