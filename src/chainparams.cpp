@@ -201,7 +201,12 @@ const std::pair<const char*, CAmount> genesisOutputs[] = {
     std::make_pair("a4a73d99269639541cb7e845a4c6ef3e3911fcd6",108968353176),
     std::make_pair("27929b31f11471aa4b77ca74bb66409ff76d24a2",126271503135),
     std::make_pair("2d6248888c7f72cc88e4883e4afd1025c43a7f0e",35102718156),
-    std::make_pair("25d8debc253f5c3f70010f41c53348ed156e7baa",80306152234),
+    std::make_pair("8b14ebad019c1fabaf50b53d9b52d0645543355f",150000000000),
+    std::make_pair("a17d6457859c81c0ce6f7a4d1df3385210bb42e1",2500000000000),
+    std::make_pair("cf572fa61e292724e8521d7f5f7f4f427fc1eec1",3000000000000),
+    std::make_pair("2e79edf089e7a6ed76d41356986b8b67bbf86de4",4000000000000),
+    std::make_pair("6c10c90fe60315ab23161bcd9b625cecf623065e",3500000000000),
+    std::make_pair("e7a515d560e2db3aa425170a1e038e0032bfef0b",4500000000000),
 };
 const size_t nGenesisOutputs = sizeof(genesisOutputs) / sizeof(genesisOutputs[0]);
 
@@ -398,6 +403,12 @@ static CBlock CreateGenesisBlockMainNet(uint32_t nTime, uint32_t nNonce, uint32_
     txNew.vpout.push_back(out);
 
 
+    // Contributors Left Over Funds
+    // RFgJ7ij69mSTgx43dTNtd5vRbA5GQEb8qE
+    //out = MAKE_OUTPUT<CTxOutStandard>();
+    //out->nValue = 77000 * COIN;
+    //out->scriptPubKey = CScript() << OP_HASH160 << ParseHex("7Q73CqoYwdtcwgrAHPmXZbDptcfpHb4bX") << OP_EQUAL;
+
     CBlock genesis;
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
@@ -467,7 +478,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000467b28adaecf2f81c8");
+        //consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000467b28adaecf2f81c8");
+        consensus.nMinimumChainWork = uint256S("0x00c8");
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0xff704cb42547da4efb2b32054c72c7682b7634ac34fda4ec88fe7badc666338c"); // 376100
@@ -479,11 +491,11 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xfb;
+        pchMessageStart[0] = 0xfd;
         pchMessageStart[1] = 0xf2;
         pchMessageStart[2] = 0xef;
         pchMessageStart[3] = 0xb4;
-        nDefaultPort = 51738;
+        nDefaultPort = 51758;
         nBIP44ID = 0x8000002C;
 
         nModifierInterval = 10 * 60;    // 10 minutes
@@ -496,21 +508,55 @@ public:
 
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlockMainNet(1500296400, 31429, 0x1f00ffff); // 2017-07-17 13:00:00
+        //genesis = CreateGenesisBlockMainNet(1500296400, 31429, 0x1f00ffff); // 2017-07-17 13:00:00
+        genesis = CreateGenesisBlockMainNet(1552618800, 4846,  0x1f00ffff); // 2017-07-17 13:00:00
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        assert(consensus.hashGenesisBlock == uint256S("0x0000ee0784c195317ac95623e22fddb8c7b8825dc3998e0bb924d66866eccf4c"));
-        assert(genesis.hashMerkleRoot == uint256S("0xc95fb023cf4bc02ddfed1a59e2b2f53edd1a726683209e2780332edf554f1e3e"));
-        assert(genesis.hashWitnessMerkleRoot == uint256S("0x619e94a7f9f04c8a1d018eb8bcd9c42d3c23171ebed8f351872256e36959d66c"));
+	/*	
+        bool fNegative;
+        bool fOverflow;
+        arith_uint256 bnTarget;
+
+        uint32_t i;
+        uint256 hash;
+
+        bnTarget.SetCompact(genesis.nBits, &fNegative, &fOverflow);
+		std::cout << "target:" << bnTarget.GetHex() << std::endl;
+        
+		for (i = 0; i < 4294967295; i++) {
+                genesis.nNonce=i;
+                hash = genesis.GetHash();
+                //std::cout << "hash:" << hash.GetHex() << std::endl;
+                if (UintToArith256(hash) <= bnTarget){
+                        //std::cout << "nonce:" << i << std::endl;
+                        break;
+                }
+        }
+        hash = genesis.GetHash();
+        if (UintToArith256(hash) <= bnTarget){
+                std::cout << "nonce1:" << i << std::endl;
+        }
+
+        std::cout << "block:" << consensus.hashGenesisBlock.GetHex() << std::endl;
+        std::cout << "merkle:" << genesis.hashMerkleRoot.GetHex() << std::endl;
+        std::cout << "witness:" << genesis.hashWitnessMerkleRoot.GetHex() << std::endl;
+	*/
+        assert(consensus.hashGenesisBlock == uint256S("0x000063b4560d46f53dcd12e58b19e7ed10383c9272c189840cf3d0da1f7266f5"));
+        assert(genesis.hashMerkleRoot == uint256S("0x43f88620845582e023f7da779242b6c4f9123fcd864c2d1674ce326636b7a742"));
+        assert(genesis.hashWitnessMerkleRoot == uint256S("0x26b2b239a9d438e815729b63cb3554a3f34d9a780a3891b57db0e65baa555d2b"));
+
+	//assert(consensus.hashGenesisBlock == uint256S("0x0000ee0784c195317ac95623e22fddb8c7b8825dc3998e0bb924d66866eccf4c"));
+        //assert(genesis.hashMerkleRoot == uint256S("0xc95fb023cf4bc02ddfed1a59e2b2f53edd1a726683209e2780332edf554f1e3e"));
+        //assert(genesis.hashWitnessMerkleRoot == uint256S("0x619e94a7f9f04c8a1d018eb8bcd9c42d3c23171ebed8f351872256e36959d66c"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("mainnet-seed.particl.io");
-        vSeeds.emplace_back("dnsseed-mainnet.particl.io");
-        vSeeds.emplace_back("mainnet.particl.io");
+        //vSeeds.emplace_back("mainnet-seed.particl.io");
+        //vSeeds.emplace_back("dnsseed-mainnet.particl.io");
+        //vSeeds.emplace_back("mainnet.particl.io");
 
 
         vDevFundSettings.emplace_back(0,
@@ -554,7 +600,8 @@ public:
 
         checkpointData = {
             {
-                { 5000,     uint256S("0xe786020ab94bc5461a07d744f3631a811b4ebf424fceda12274f2321883713f4")},
+                { 0,     uint256S("0x000015fea34190655855c69931048a55403dd623ae986c686393a55de51a9ee2")},
+                /*{ 5000,     uint256S("0xe786020ab94bc5461a07d744f3631a811b4ebf424fceda12274f2321883713f4")},
                 { 15000,    uint256S("0xafc73ac299f2e6dd309077d230fccef547b9fc24379c1bf324dd3683b13c61c3")},
                 { 30000,    uint256S("0x35d95c12799323d7b418fd64df9d88ef67ef27f057d54033b5b2f38a5ecaacbf")},
                 { 91000,    uint256S("0x4d1ffaa5b51431918a0c74345e2672035c743511359ac8b1be67467b02ff884c")},
@@ -567,15 +614,18 @@ public:
                 { 282130,   uint256S("0xf720421256795081c1d985e997bb81d040d557f24b9e2d16a1c13d21734fb2b1")},
                 { 303640,   uint256S("0x7cc035d7888ee6d824cec8ff01a6287a71873d874f72a5fd3706d227b88f8e99")},
                 { 357320,   uint256S("0x20b01f2bef93197bb014d27125939cd8d4f6a34257fdb498ae64c8644b8f2289")},
-                { 376100,   uint256S("0xff704cb42547da4efb2b32054c72c7682b7634ac34fda4ec88fe7badc666338c")},
+                { 376100,   uint256S("0xff704cb42547da4efb2b32054c72c7682b7634ac34fda4ec88fe7badc666338c")},*/
             }
         };
 
         chainTxData = ChainTxData {
             // Data from rpc: getchaintxstats 4096 ff704cb42547da4efb2b32054c72c7682b7634ac34fda4ec88fe7badc666338c
-            /* nTime    */ 1548752688,
-            /* nTxCount */ 419347,
-            /* dTxRate  */ 0.008
+            /* nTime     1548752688,
+            /* nTxCount  419347,
+            /* dTxRate   0.008 */
+	    	1551837600,
+		0,
+		0
         };
 
         /* disable fallback fee on mainnet */

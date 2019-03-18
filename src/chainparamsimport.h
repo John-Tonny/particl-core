@@ -3,8 +3,76 @@
 
 
 void AddImportHashesMain(std::vector<CImportedCoinbaseTxn> &vImportedCoinbaseTxns)
-{
-    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(1,  uint256S("d496208ea84193e0c5ed05ac708aec84dfd2474b529a7608b836e282958dc72b")));
+{	
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(1,  uint256S("b793f6ac48e51eff8ddc0f8e5bdc1a4f1713030d01469117af3d88a930ad0894")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(2,  uint256S("19649121536c2fc95893d1e4be361945911196a52e83b26d104fb2a3f876139e")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(3,  uint256S("7aff6db54762f2f433ededaf27b752ec3c1ca3f8fd7c9a6263bc26a9306f5883")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(4,  uint256S("ac3fa36f8fb50a3876a4f8d622363e33dfb83916e45836be8cc1453721b0173e")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(5,  uint256S("dd8ca0f70790b2b38e69ea80f463ba1adace70d0abdf38539ba1f61b5edb83d6")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(6,  uint256S("fd63b522fdd8bf0e2da8e8ce06a37ea232aa932e7b84a65abfd5db36efef5234")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(7,  uint256S("ecf0eb88dae8348dc0862d5bebdeb73c13f54bfcc23c12f8d9856f6e196bcce0")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(8,  uint256S("596a1b7802e3aede6f2f765c8364c7726ae522aedbf70362fe1ed4f935875b15")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(9,  uint256S("5136850595950d33d4271eb893cf284825a3548ff93df0a65929152d61189c8b")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(10,  uint256S("c96cd00ca16f174d48ed01188308a4ca8199dea6a49699bfe3369b03aaa863a0")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(11,  uint256S("d48680c6a3e3cfc8058bee0a894c95c49061194e2bcd4a4659b143bfe498dadb")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(12,  uint256S("1f39b6f3f1ee77fd51964a8161ec9d051f9912ceaf8f4f512065d5a397ed601f")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(13,  uint256S("cd25a3c7a5167601e3c003ef7d1ad17c1f9183b25d771698319b18df373d3ea4")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(14,  uint256S("8dcb070dfb67ec1b9a9d38a73ae6da1d61875bd954e36a67b6bc85fafa072a0c")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(15,  uint256S("bdd0fd837d3881af608486b8130245f1f3b5c4ced8ad57ee684adba5caff4ca5")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(16,  uint256S("eee3b44423050d6cace3209670b7c8ff858f659ca6413a4d6043018106e41d77")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(17,  uint256S("70eeddc25934658be5f00cc922899d61e710d87a363bb3fd6a8f1b44d41ff0bc")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(18,  uint256S("111bb158d985b560900359989985c33fb524c6b250c700097d2f37f1b21e144e")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(19,  uint256S("463b7531d67c911403643029875e07a61315cd411195cc5749ea348b5df105d5")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(20,  uint256S("d1bb226d4e9d1a4fa4d4a61eb156b7033b82a70a1574c8399e4a5a4d4d06b918")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(21,  uint256S("b8f9f5025d66245d41f9ab0dbf695dfa2e36bd1aa0664ae17548f5823f8d3eab")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(22,  uint256S("2046afc4f2d299962d253e4a3708fa51c9cde1e440a1a3d90489311e7fad619c")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(23,  uint256S("97089d029b13de9e696b4673877337b035bed6a304dc5678d15d48961d0d9b3a")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(24,  uint256S("6dc761e316a11a11b319571de5c97a1b138c27cb9ff1a7e954cdef4ec0733fb8")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(25,  uint256S("fe21ed319225abbe6b1cefc179918b895c352af2f2dc1e393ac316d367a8debd")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(26,  uint256S("cab0cc1065c6c90994cd67116612ea63b497a43c3a93c0b082cdd4de1e18a53f")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(27,  uint256S("d705eb891d68b73e32dc78e205950f854817a522d1fdfb9d57bc44f925b713c0")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(28,  uint256S("116c3cad37434ee5ea9d79ac63946c067312edf8abf61f51cae96e1056f1b32e")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(29,  uint256S("fd9b080c8f138375a9c83ecd59ef99aa69ee7d6a0f97ed1d561e1884a1f1a691")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(30,  uint256S("a17da823240488e6893b4ad43f06db301751f6c847a14dd68527deec2e2a2390")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(31,  uint256S("65a0d47fa643ac35ea5b97c5c7b7d0c35962effe863e0134aa954022a540a30d")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(32,  uint256S("4d627999b09f37065799a1f7ae22c389aa14f2b88d7fd52a81fad95a477087bd")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(33,  uint256S("cc3902694e8c6bc57ea77c28cccd10bdd9d8679140cc9b66b44711bfdfd4231f")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(34,  uint256S("d8ffdd166fa65b08d9e4d41c8e2b7a1d460becce11dfd84294eedfa75905d808")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(35,  uint256S("bc1d0606908ce4093e9063e98629374f57394c58f7183389d101eddd6f4ca07d")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(36,  uint256S("b539b3afe361a9a6761de2d79ba5d276f4b807ed4de2ac2f1e8bf3b4c79c0346")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(37,  uint256S("23792ff9bea031e471787d526cf40b8de06b992d1846291b459f8c5807d504b3")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(38,  uint256S("064f2679775fbcd28bab22be984c52680ec2bb75cea5dbeb4530d245a5e48e07")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(39,  uint256S("5402ad5913c35a0a1f7c0645f69ac6e7db7ce0cbde3ac7c6af66f9de1e3793cd")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(40,  uint256S("c4ac4feb9870eff9e18e1088445609ed58be97dd5353c4124e06af03615ba10b")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(41,  uint256S("3843571f0defe2b2f048104a7f49b6326e2e8462550878e1343d10c0d54b264c")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(42,  uint256S("aff017faec1ce281f5ff91e4afcc05e269dac3e622b8012b7d4049794374cb31")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(43,  uint256S("151d0a84ee4c8276b9f97bfd13c796ed6766cf9d6d9ef8a7ed6825d4e449f2b7")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(44,  uint256S("0dee610282732b91af3f75ea6d644df24e93c7ae17d2dde7c2086d8d37a46803")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(45,  uint256S("2d3e2f9d4b2a899bf8f2a5fd7efc8c78a43b5a1723a68430eb5736706feec593")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(46,  uint256S("7cc0c52c45c3252af45f1d98f502c296edbed553dba332bbd12e620ec801c140")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(47,  uint256S("1ccff549e643ef524db65213cdc361cae70de16262d4f9460d6517a4c58e4e4d")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(48,  uint256S("3d8f06b5e8aadc9b8114450de381a2eff13400609b818d65b24d5b17a1c6a058")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(49,  uint256S("2433bc62d091aab8c0f30c98ac6a79c521bfa264551d7c2b78aafe9a6cc9953e")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(50,  uint256S("f1b4dc7f8dfa73d4c51d46b6aee1cdbdb00ad5a48fc5642f3ed26260a195341b")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(51,  uint256S("33d626935efd3f9b29e004cdc4ee7a656142d3e9f772a128096951c55452f817")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(52,  uint256S("f2fa6149f1c4553da8c028cc6b6a6979a2220c1979e1447f8391d164a23a5901")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(53,  uint256S("f074526ad019a526be62eb8e51a79b80bbe0628d2cd6148cdce52a0d6d2fca3a")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(54,  uint256S("c7edb09d7cc6b15d2bb3b77969b33d6336875d165f03867db3df2f078abe4568")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(55,  uint256S("3c419195d9677bce1e7b1c96f578ba41bf36d7c39a7086a102ef59312fbf156c")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(56,  uint256S("fe955588a40f8b570a3edb25ebc8e9d1b0a31158be498fa890e6324bb7a9e04c")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(57,  uint256S("ddbdadc36bb02f0c571cf96d8874cdc033fb6ad288d148903df065aa22ac9d46")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(58,  uint256S("e2a8d057cc1efa7be40b4fa7ebb2263c71a5729ef53056b2a96a3fe469aa66f2")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(59,  uint256S("0da08d8d322c92b4692429912e0d261fa78336a64b12c1a4999789eac3592fc7")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(60,  uint256S("f1ce1eacb143768f595ba6839ccc9fd5f16d099314111557254e77b249c620a3")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(61,  uint256S("5f875fd222bed957d85143a215e1e41564b27d6f900f51cd5fb4f50f74da6b99")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(62,  uint256S("6642f0405f509b3f24b44f965a7c2f7feace9852dc5306d5b34a8219b0cacb61")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(63,  uint256S("a084eb074738353cb7d4b6d26b00789840fee22bbc7147fece56665a79b15090")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(64,  uint256S("5c19e66190bc3157f6386a9aa1870ce1ac3dc54bcce2e53199b4e45122c0a23c")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(65,  uint256S("88262f5dd565228336240fc0667f9b212fc36beada6a3eb0ae55d1057c956da2")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(66,  uint256S("cf23b094c84d93ac42e99be429e5d19486eaa22ef45dfcf6be4e9d33a9df7245")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(67,  uint256S("4990dda9b732e1247a70caf7f0454164b237e25072478f3508379fa0779b021f")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(68,  uint256S("cd5da0cc1eeb646f6044abd67eab79738325304bf22c44994648aa8fb25419ce")));
+/*    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(1,  uint256S("d496208ea84193e0c5ed05ac708aec84dfd2474b529a7608b836e282958dc72b")));
     vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(2,  uint256S("0fb399434d3febd0288f9a06750da5232fe9cdd3613f89b5b712689423087eab")));
     vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(3,  uint256S("a0b192e79159b01e8ce802ab628b36579fc2d86820f6b46b082a374f3f4e1ea9")));
     vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(4,  uint256S("741356f178913490bb2f4e760cc43cd6af4dc03760c71f7250de00e0ad643693")));
@@ -71,7 +139,7 @@ void AddImportHashesMain(std::vector<CImportedCoinbaseTxn> &vImportedCoinbaseTxn
     vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(65, uint256S("8bd85fd95a5be575e444cc0560a1ba5c3c7299e16190f634fc4630cc8bd75f68")));
     vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(66, uint256S("3427c1d63b750e73b261160af38eb788e8b23d583b5fe5e17c11475484a3da68")));
     vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(67, uint256S("35ac1a7f09f0a649a4c6a536b7b434dbabde2ff812c2164a32cf7510e80bf24a")));
-    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(68, uint256S("ad5f5769a8ee09f1f255b05c8a1404dd9bc85c89654f6633b4287fbc7e8f68be")));
+    vImportedCoinbaseTxns.push_back(CImportedCoinbaseTxn(68, uint256S("ad5f5769a8ee09f1f255b05c8a1404dd9bc85c89654f6633b4287fbc7e8f68be")));*/
 };
 
 void AddImportHashesTest(std::vector<CImportedCoinbaseTxn> &vImportedCoinbaseTxns)

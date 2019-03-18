@@ -208,6 +208,7 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
     fclose(fp);
 
     uint256 hash = txn.GetHash();
+    std::cout << "height:" << nHeight  << "txid:" << hash.GetHex() << std::endl;   
     if (!Params().CheckImportCoinbase(nHeight, hash))
         return error("%s - Incorrect outputs hash.", __func__);
 
@@ -336,7 +337,6 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
                 continue;
             };
         };
-
         if (g_connman->vNodes.empty() || IsInitialBlockDownload())
         {
             fIsStaking = false;
@@ -410,7 +410,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
                 nWaitFor = std::min(nWaitFor, (size_t)30000);
                 continue;
             };
-
+	    
             if (pwallet->IsLocked())
             {
                 pwallet->nIsStaking = CHDWallet::NOT_STAKING_LOCKED;
@@ -437,6 +437,10 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
                     LogPrint(BCLog::POS, "%s: Couldn't create new block.\n", __func__);
                     continue;
                 };
+		/*
+		for(int aa=0;aa<68;aa++){		
+			ImportOutputs(pblocktemplate.get(), aa+1);
+		}*/
 
                 if (nBestHeight+1 <= nLastImportHeight
                     && !ImportOutputs(pblocktemplate.get(), nBestHeight+1))
