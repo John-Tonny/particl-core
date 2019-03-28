@@ -715,7 +715,7 @@ public:
         m_assumed_chain_state_size = 1;
 
         //genesis = CreateGenesisBlockTestNet(1502309248, 5924, 0x1f00ffff);
-        genesis = CreateGenesisBlockTestNet(1553504400, 20463, 0x1f00ffff);
+        genesis = CreateGenesisBlockTestNet(1553756400, 150970, 0x1f00ffff);
         consensus.hashGenesisBlock = genesis.GetHash();
 
  	/*
@@ -746,8 +746,8 @@ public:
         std::cout << "block:" << consensus.hashGenesisBlock.GetHex() << std::endl;
         std::cout << "merkle:" << genesis.hashMerkleRoot.GetHex() << std::endl;
         std::cout << "witness:" << genesis.hashWitnessMerkleRoot.GetHex() << std::endl;
-        */
-        assert(consensus.hashGenesisBlock == uint256S("0x0000079307bb5c5a24c5d64c985c5774d054c52823a1c4623146e11f9f5b6661"));
+ 	*/       
+        assert(consensus.hashGenesisBlock == uint256S("0x0000d5e376b65368002575eb0bf881c433e0df0afcae64bdf0d2943026e3f490"));
         assert(genesis.hashMerkleRoot == uint256S("0x73679284f067867d55f7cc57629cbe211f560b408b3db697633c186ad9c54296"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0xda2d0655a4348160629b4096604faa723607309944ac7e809f0ec39a6f4c55e1"));
 
@@ -761,7 +761,8 @@ public:
         //vSeeds.emplace_back("testnet-seed.particl.io");
         //vSeeds.emplace_back("dnsseed-testnet.particl.io");
 
-        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 60)));
+        //vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rTvv9vsbu269mjYYEecPYinDG8Bt7D86qD", 10, 60)));
+        vDevFundSettings.push_back(std::make_pair(0, DevFundSettings("rQApnBUWAmJ28PHzaFw9gPeqiDFBxPWK3B", 10, 100)));
 
         base58Prefixes[PUBKEY_ADDRESS]     = {0x76}; // p
         base58Prefixes[SCRIPT_ADDRESS]     = {0x7a};
@@ -798,7 +799,7 @@ public:
 
         checkpointData = {
             {
-		{0, uint256S("0x0000079307bb5c5a24c5d64c985c5774d054c52823a1c4623146e11f9f5b6661")},
+		{0, uint256S("0x0000d5e376b65368002575eb0bf881c433e0df0afcae64bdf0d2943026e3f490")},
                 /*{127620, uint256S("0xe5ab909fc029b253bad300ccf859eb509e03897e7853e8bfdde2710dbf248dd1")},
                 {210920, uint256S("0x5534f546c3b5a264ca034703b9694fabf36d749d66e0659eef5f0734479b9802")},
                 {259290, uint256S("0x58267bdf935a2e0716cb910d055b8cdaa019089a5f71c3db90765dc7101dc5dc")},
