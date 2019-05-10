@@ -434,7 +434,7 @@ public:
         //genesis = CreateGenesisBlockMainNet(1500296400, 31429, 0x1f00ffff); // 2017-07-17 13:00:00
         genesis = CreateGenesisBlockMainNet(1555488000, 22074,  0x1f00ffff); // 2019-04-16 10:30:00
         consensus.hashGenesisBlock = genesis.GetHash();
-        
+        /*
         bool fNegative;
         bool fOverflow;
         arith_uint256 bnTarget;
@@ -462,7 +462,7 @@ public:
         std::cout << "block:" << consensus.hashGenesisBlock.GetHex() << std::endl;
         std::cout << "merkle:" << genesis.hashMerkleRoot.GetHex() << std::endl;
         std::cout << "witness:" << genesis.hashWitnessMerkleRoot.GetHex() << std::endl;
-	
+	*/
         assert(consensus.hashGenesisBlock == uint256S("0x0000ee0141b0e3537d376a09660ffde7548c11c188518ef4fbca889e90f4dc67"));
         assert(genesis.hashMerkleRoot == uint256S("0x565caed909c95168ca98bcab200da8dfcdbabf97e8df7f5c99a75c4c4c500d21"));
         assert(genesis.hashWitnessMerkleRoot == uint256S("0xd8feebac6ea34f382473940b4cff53f9d4560ff8f4ed0d100157bda5f5979971"));
