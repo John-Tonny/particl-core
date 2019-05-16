@@ -673,8 +673,8 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/particl/particl-core>";
-    const std::string URL_WEBSITE = "<https://particl.io/>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/vpubchain/particl-core>";
+    const std::string URL_WEBSITE = "<https://www.vpubchain.info/>";
 
     return CopyrightHolders(_("Copyright (C)")) + "\n" +
            "\n" +
