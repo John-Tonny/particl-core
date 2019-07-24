@@ -8,6 +8,7 @@
 #include <key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 #include <uint256.h>
 
@@ -177,14 +178,10 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return ok;
     }
     case TX_WITNESS_V0_KEYHASH:
-        if (creator.IsParticlVersion())
-            return false;
         ret.push_back(vSolutions[0]);
         return true;
 
     case TX_WITNESS_V0_SCRIPTHASH:
-        if (creator.IsParticlVersion())
-            return false;
         CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160.begin());
         if (GetCScript(provider, sigdata, h160, scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
@@ -242,8 +239,6 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
 
     if (solved && whichType == TX_WITNESS_V0_KEYHASH)
     {
-        if (creator.IsParticlVersion())
-            return false;
         CScript witnessscript;
         witnessscript << OP_DUP << OP_HASH160 << ToByteVector(result[0]) << OP_EQUALVERIFY << OP_CHECKSIG;
         txnouttype subType;
@@ -254,8 +249,6 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     }
     else if (solved && whichType == TX_WITNESS_V0_SCRIPTHASH)
     {
-        if (creator.IsParticlVersion())
-            return false;
         CScript witnessscript(result[0].begin(), result[0].end());
         sigdata.witness_script = witnessscript;
         txnouttype subType;
@@ -272,7 +265,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         result.push_back(std::vector<unsigned char>(subscript.begin(), subscript.end()));
     }
 
-    if (creator.IsParticlVersion()) {
+    if (creator.IsParticlVersion() && !sigdata.witness) {
         sigdata.scriptWitness.stack = result;
     } else  {
         sigdata.scriptSig = PushAll(result);
@@ -536,7 +529,6 @@ bool LookupHelper(const M& map, const K& key, V& value)
 const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR = DummySignatureCreator(32, 32);
 const BaseSignatureCreator& DUMMY_MAXIMUM_SIGNATURE_CREATOR = DummySignatureCreator(33, 32);
 const BaseSignatureCreator& DUMMY_SIGNATURE_CREATOR_PARTICL = DummySignatureCreatorParticl();
-const SigningProvider& DUMMY_SIGNING_PROVIDER = SigningProvider();
 
 bool IsSolvable(const SigningProvider& provider, const CScript& script)
 {
@@ -557,43 +549,18 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script)
     return false;
 }
 
-bool HidingSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const
+bool IsSegWitOutput(const SigningProvider& provider, const CScript& script)
 {
-    return m_provider->GetCScript(scriptid, script);
-}
-
-bool HidingSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
-{
-    return m_provider->GetPubKey(keyid, pubkey);
-}
-
-bool HidingSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const
-{
-    if (m_hide_secret) return false;
-    return m_provider->GetKey(keyid, key);
-}
-
-bool HidingSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
-{
-    if (m_hide_origin) return false;
-    return m_provider->GetKeyOrigin(keyid, info);
-}
-
-bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
-bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
-bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return LookupHelper(origins, keyid, info); }
-bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
-
-FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b)
-{
-    FlatSigningProvider ret;
-    ret.scripts = a.scripts;
-    ret.scripts.insert(b.scripts.begin(), b.scripts.end());
-    ret.pubkeys = a.pubkeys;
-    ret.pubkeys.insert(b.pubkeys.begin(), b.pubkeys.end());
-    ret.keys = a.keys;
-    ret.keys.insert(b.keys.begin(), b.keys.end());
-    ret.origins = a.origins;
-    ret.origins.insert(b.origins.begin(), b.origins.end());
-    return ret;
+    std::vector<valtype> solutions;
+    auto whichtype = Solver(script, solutions);
+    if (whichtype == TX_WITNESS_V0_SCRIPTHASH || whichtype == TX_WITNESS_V0_KEYHASH || whichtype == TX_WITNESS_UNKNOWN) return true;
+    if (whichtype == TX_SCRIPTHASH) {
+        auto h160 = uint160(solutions[0]);
+        CScript subscript;
+        if (provider.GetCScript(h160, subscript)) {
+            whichtype = Solver(subscript, solutions);
+            if (whichtype == TX_WITNESS_V0_SCRIPTHASH || whichtype == TX_WITNESS_V0_KEYHASH || whichtype == TX_WITNESS_UNKNOWN) return true;
+        }
+    }
+    return false;
 }

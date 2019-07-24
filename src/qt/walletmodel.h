@@ -45,7 +45,6 @@ class COutput;
 class CCoinControlEntry;
 class CPubKey;
 class uint256;
-class CHDWallet;
 class UniValue;
 
 namespace interfaces {
@@ -205,16 +204,19 @@ public:
 
         bool isValid() const { return valid; }
 
-        // Copy operator and constructor transfer the context
-        UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
-        UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
+        // Copy constructor is disabled.
+        UnlockContext(const UnlockContext&) = delete;
+        // Move operator and constructor transfer the context
+        UnlockContext(UnlockContext&& obj) { CopyFrom(std::move(obj)); }
+        UnlockContext& operator=(UnlockContext&& rhs) { CopyFrom(std::move(rhs)); return *this; }
     private:
         WalletModel *wallet;
         bool valid;
         mutable bool relock; // mutable, as it can be set to false by copying
         bool was_unlocked_for_staking;
 
-        void CopyFrom(const UnlockContext& rhs);
+        UnlockContext& operator=(const UnlockContext&) = default;
+        void CopyFrom(UnlockContext&& rhs);
     };
 
     UnlockContext requestUnlock();

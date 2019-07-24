@@ -6,7 +6,7 @@
 from decimal import Decimal
 
 from test_framework.test_particl import ParticlTestFramework
-from test_framework.util import connect_nodes_bi
+from test_framework.util import connect_nodes_bi, assert_equal
 from test_framework.address import keyhash_to_p2pkh, hex_str_to_bytes
 from test_framework.authproxy import JSONRPCException
 
@@ -90,10 +90,11 @@ class ColdStakingTest(ParticlTestFramework):
         except JSONRPCException as e:
             assert('is spendable from this wallet' in e.error['message'])
 
-
+        assert_equal(nodes[0].getcoldstakinginfo()['coin_in_coldstakeable_script'], Decimal(0))
         txid1 = nodes[0].sendtoaddress(addr2_1, 100)
-
         tx = nodes[0].getrawtransaction(txid1, True)
+
+        assert_equal(nodes[0].getcoldstakinginfo()['coin_in_coldstakeable_script'], Decimal('9899.999572'))
 
         hashCoinstake = ''
         hashOther = ''
@@ -240,8 +241,8 @@ class ColdStakingTest(ParticlTestFramework):
         assert(ro['num_derives'] == '3')
 
         # Test stake to coldstakingchangeaddress
-        ro = nodes[0].walletsettings('stakelimit', {'height':2})
-        ro = nodes[0].reservebalance(False)
+        nodes[0].walletsettings('stakelimit', {'height':2})
+        nodes[0].reservebalance(False)
 
         assert(self.wait_for_height(nodes[0], 2))
         self.sync_all()
@@ -286,6 +287,10 @@ class ColdStakingTest(ParticlTestFramework):
                 fFound = True
                 assert(e['involvesWatchonly'] == True)
         assert(fFound)
+
+        self.log.info('Test gettxoutsetinfobyscript')
+        ro = nodes[0].gettxoutsetinfobyscript()
+        assert(ro['coldstake_paytopubkeyhash']['num_plain'] > 5)
 
 
 if __name__ == '__main__':

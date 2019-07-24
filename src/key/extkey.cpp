@@ -247,11 +247,11 @@ int ExtractExtKeyPath(const std::string &sPath, std::vector<uint32_t> &vPath)
 
         if (fHarden) {
             if ((nChild >> 31) == 0) {
-                nChild |= 1 << 31;
+                nChild |= 1U << 31;
             } else {
                 return 8;
             }
-        };
+        }
 
         vPath.push_back(nChild);
 
@@ -602,7 +602,7 @@ int CExtKeyAccount::HaveKey(const CKeyID &id, bool fUpdate, const CEKAKey *&pak,
         pak = &mi->second;
         ismine = IsMine(pak->nParent);
         if (LogAcceptCategory(BCLog::HDWALLET)) {
-            LogPrintf("HaveKey in lookAhead %s\n", CBitcoinAddress(mi->first).ToString());
+            LogPrintf("HaveKey in lookAhead %s\n", EncodeDestination(PKHash(mi->first)));
         }
         return fUpdate ? HK_LOOKAHEAD_DO_UPDATE : HK_LOOKAHEAD;
     }
@@ -770,7 +770,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, const CEKAKey &keyIn)
     }
 
     if (mapLookAhead.erase(id) != 1) {
-        LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", GetIDString58(), CBitcoinAddress(id).ToString());
+        LogPrintf("Warning: SaveKey %s key not found in look ahead %s.\n", GetIDString58(), EncodeDestination(PKHash(id)));
     }
 
     mapKeys[id] = keyIn;
@@ -811,7 +811,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, const CEKAKey &keyIn)
     }
 
     if (LogAcceptCategory(BCLog::HDWALLET)) {
-        LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), keyIn.nParent, CBitcoinAddress(id).ToString());
+        LogPrintf("Saved key %s %d, %s.\n", GetIDString58(), keyIn.nParent, EncodeDestination(PKHash(id)));
 
         // Check match
         CStoredExtKey *pa;
@@ -855,7 +855,7 @@ bool CExtKeyAccount::SaveKey(const CKeyID &id, const CEKASCKey &keyIn)
     mapStealthChildKeys[id] = keyIn;
 
     if (LogAcceptCategory(BCLog::HDWALLET)) {
-        LogPrintf("SaveKey(): CEKASCKey %s, %s.\n", GetIDString58(), CBitcoinAddress(id).ToString());
+        LogPrintf("SaveKey(): CEKASCKey %s, %s.\n", GetIDString58(), EncodeDestination(PKHash(id)));
     }
 
     return true;
@@ -911,7 +911,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
             keyId = pk.GetID();
             if ((mi = mapKeys.find(keyId)) != mapKeys.end()) {
                 if (LogAcceptCategory(BCLog::HDWALLET)) {
-                    LogPrintf("%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
+                    LogPrintf("%s: key exists in map skipping %s.\n", __func__, EncodeDestination(PKHash(keyId)));
                 }
                 continue;
             }
@@ -932,7 +932,7 @@ int CExtKeyAccount::AddLookBehind(uint32_t nChain, uint32_t nKeys)
         mapLookAhead[keyId] = CEKAKey(nChain, nChildOut);
 
         if (LogAcceptCategory(BCLog::HDWALLET)) {
-            LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
+            LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, EncodeDestination(PKHash(keyId)), mapLookAhead.size());
         }
     }
 
@@ -972,7 +972,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
             keyId = pk.GetID();
             if ((mi = mapKeys.find(keyId)) != mapKeys.end()) {
                 if (LogAcceptCategory(BCLog::HDWALLET)) {
-                    LogPrintf("%s: key exists in map skipping %s.\n", __func__, CBitcoinAddress(keyId).ToString());
+                    LogPrintf("%s: key exists in map skipping %s.\n", __func__, EncodeDestination(PKHash(keyId)));
                 }
                 continue;
             }
@@ -994,7 +994,7 @@ int CExtKeyAccount::AddLookAhead(uint32_t nChain, uint32_t nKeys)
         pc->nLastLookAhead = nChildOut;
 
         if (LogAcceptCategory(BCLog::HDWALLET)) {
-            LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, CBitcoinAddress(keyId).ToString(), mapLookAhead.size());
+            LogPrintf("%s: Added %s, look-ahead size %u.\n", __func__, EncodeDestination(PKHash(keyId)), mapLookAhead.size());
         }
     }
 
@@ -1074,7 +1074,7 @@ inline void AppendPathLink(std::string &s, uint32_t n, char cH)
     s += "/";
     bool fHardened = false;
     if ((n >> 31) == 1) {
-        n &= ~(1 << 31);
+        n &= ~(1U << 31);
         fHardened = true;
     }
     s += strprintf("%u", n);

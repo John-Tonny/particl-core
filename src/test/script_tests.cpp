@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,20 +8,20 @@
 #include <key/extkey.h>
 #include <key/stealth.h>
 #include <key.h>
-#include <keystore.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <util/system.h>
 #include <util/strencodings.h>
-#include <test/test_bitcoin.h>
-#include <rpc/server.h>
+#include <test/setup_common.h>
+#include <rpc/util.h>
+#include <streams.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/particlconsensus.h>
 #endif
 
-#include <fstream>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -1224,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     std::vector<uint8_t> vchAmount(8);
     memcpy(&vchAmount[0], &amount, 8);
 
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     std::vector<CKey> keys;
     std::vector<CPubKey> pubkeys;
     for (int i = 0; i < 3; i++)
@@ -1236,7 +1236,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
         BOOST_CHECK(keystore.AddKey(key));
     }
 
-    CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(keys[0].GetPubKey().GetID()));
+    CMutableTransaction txFrom = BuildCreditingTransaction(GetScriptForDestination(PKHash(keys[0].GetPubKey())));
     CMutableTransaction txTo = BuildSpendingTransaction(CScript(), CScriptWitness(), CTransaction(txFrom));
     CScript& scriptPubKey = txFrom.vout[0].scriptPubKey;
     SignatureData scriptSig;
@@ -1262,7 +1262,7 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     // P2SH, single-signature case:
     CScript pkSingle; pkSingle << ToByteVector(keys[0].GetPubKey()) << OP_CHECKSIG;
     BOOST_CHECK(keystore.AddCScript(pkSingle));
-    scriptPubKey = GetScriptForDestination(CScriptID(pkSingle));
+    scriptPubKey = GetScriptForDestination(ScriptHash(pkSingle));
     BOOST_CHECK(SignSignature(keystore, CTransaction(txFrom), txTo, 0, SIGHASH_ALL));
     scriptSig = DataFromTransaction(txTo, 0, txFrom.vout[0]);
     combined = CombineSignatures(txFrom.vout[0], txTo, scriptSig, empty);

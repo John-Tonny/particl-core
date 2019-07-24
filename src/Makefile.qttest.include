@@ -33,10 +33,10 @@ TEST_QT_H = \
   qt/test/wallettests.h
 
 TEST_BITCOIN_CPP = \
-  test/test_bitcoin.cpp
+  test/setup_common.cpp
 
 TEST_BITCOIN_H = \
-  test/test_bitcoin.h
+  test/setup_common.h
 
 qt_test_test_particl_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
@@ -64,7 +64,7 @@ endif # ENABLE_WALLET
 
 nodist_qt_test_test_particl_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
-qt_test_test_particl_qt_DEPENDENCIES = $(LIBPARTICLQT)
+qt_test_test_particl_qt_DEPENDENCIES = $(LIBPARTICLQT) $(LIBPARTICL_SERVER)
 qt_test_test_particl_qt_LDADD = $(LIBPARTICLQT) $(LIBPARTICL_SERVER)
 if ENABLE_WALLET
 qt_test_test_particl_qt_LDADD += $(LIBPARTICL_UTIL) $(LIBPARTICL_WALLET)

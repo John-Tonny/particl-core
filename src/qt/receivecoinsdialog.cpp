@@ -7,9 +7,7 @@
 #include <qt/receivecoinsdialog.h>
 #include <qt/forms/ui_receivecoinsdialog.h>
 
-#include <qt/addressbookpage.h>
 #include <qt/addresstablemodel.h>
-#include <qt/bitcoinunits.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/receiverequestdialog.h>
@@ -152,7 +150,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
 
     /* Generate new receiving address
     OutputType address_type;
-    if (ui->useBech32->isChecked()) {
+    if (!ui->useLegacyAddress->isChecked()) {
         address_type = OutputType::BECH32;
     } else {
         address_type = model->wallet().getDefaultAddressType();

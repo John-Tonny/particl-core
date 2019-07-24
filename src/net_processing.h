@@ -19,6 +19,7 @@ static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 /** Default for BIP61 (sending reject messages) */
 static constexpr bool DEFAULT_ENABLE_BIP61{false};
+static const bool DEFAULT_PEERBLOOMFILTERS = false;
 
 class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
 private:
@@ -88,8 +89,6 @@ struct CNodeStateStats {
     int nLooseHeadersCount = 0;
 };
 
-bool IncomingBlockChecked(const CBlock &block, CValidationState &state);
-
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
@@ -98,5 +97,9 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 void DecMisbehaving(NodeId nodeid, int howmuch) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 NodeId GetBlockSource(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+void IncPersistentMisbehaviour(NodeId node_id, int howmuch) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+int GetNumDOSStates() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+void ClearDOSStates() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 #endif // BITCOIN_NET_PROCESSING_H

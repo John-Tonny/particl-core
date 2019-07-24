@@ -1,6 +1,87 @@
-Master
+Next Release
 ==============
 
+
+0.18.1.0
+==============
+
+- clearbanned rpc cmd clears persistent DOS counters too.
+
+
+0.18.0.12
+==============
+
+- Merged Bitcoin 0.18.1 backports.
+- Fixed help text for createsignaturewith commands.
+- Added 'pubkey' to output of extkey info extended-secret-key.
+- Fixed help text for getspentinfo.
+- Enabled segwit addresses in Particl mode for easier integrations.
+- Raised minimum peer version to 90009.
+
+
+0.18.0.11
+==============
+
+- Fixed regression causing unloadwallet to fail.
+- Added smsggetinfo RPC command to display SMSG related information.
+- Added smsgsetwallet RPC command to switch the active SMSG wallet without disabling SMSG.
+- Unloading the active SMSG wallet will leave SMSG enabled.
+- Fixed DOS vulnerability.
+- Fixed rpc cmd filtertransactions filtering by type.
+
+
+0.18.0.10
+==============
+
+- Fixed avoidpartialspends.
+- Testnet fork scheduled for 2019-07-01 12:00:00 UTC
+  - Enable variable difficulty for smsg free messages.
+- Mainnet fork scheduled for 2019.07.16-12:00:00 UTC
+  - Enable bulletproof rangeproofs.
+  - Enable RingCT transactions.
+  - Enable variable fee rate for smsg paid messages.
+  - Enable variable difficulty for smsg free messages.
+
+
+0.18.0.9
+==============
+
+- pruneorphanedblocks shows shutdown warning if not in test mode.
+- Fixed Qt 'Request payment' button greyed out after importing mnemonic.
+
+
+0.18.0.8
+==============
+
+- Fixed issue where clearing the rewardaddress requires a restart.
+- Fixed regression where disablewallet required nosmsg also.
+- Fixed getrawtransaction failing where scripts are nonstandard with OP_ISCOINSTAKE.
+- New balance category for immature anon coin.
+
+
+0.18.0.7
+==============
+
+- Fixed regression causing wallet catch-up rescan to never trigger.
+- New checkpoints.
+
+
+0.18.0.6 rc2
+==============
+
+- Fixed regression when sending all blind to part.
+
+
+0.18.0.6 rc1
+==============
+
+SMSG won't connect to nodes running a version below 0.18.0.6
+
+- Fixed failure when sending all blind to part.
+- smsgbuckets: Add total only mode
+- SMSG: Difficulty can be adjusted by stakers.
+- SMSG: Messages can be created and imported without being transmitted.
+- SMSG: Messages can be sent without being stored to the outbox.
 
 
 0.18.0.5 rc1

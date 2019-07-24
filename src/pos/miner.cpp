@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Particl Core developers
+// Copyright (c) 2017-2019 The Particl Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,14 +8,13 @@
 #include <miner.h>
 #include <chainparams.h>
 #include <util/moneystr.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 
-#include <fs.h>
 #include <sync.h>
 #include <net.h>
 #include <validation.h>
 #include <consensus/validation.h>
-#include <base58.h>
-#include <crypto/sha256.h>
 
 #include <wallet/hdwallet.h>
 
@@ -46,7 +45,7 @@ double GetPoSKernelPS()
 {
     LOCK(cs_main);
 
-    CBlockIndex *pindex = chainActive.Tip();
+    CBlockIndex *pindex = ::ChainActive().Tip();
     CBlockIndex *pindexPrevStake = nullptr;
 
     int nBestHeight = pindex->nHeight;
@@ -96,12 +95,12 @@ bool CheckStake(CBlock *pblock)
     {
         LOCK(cs_main);
 
-        BlockMap::const_iterator mi = mapBlockIndex.find(pblock->hashPrevBlock);
-        if (mi == mapBlockIndex.end()) {
+        BlockMap::const_iterator mi = ::BlockIndex().find(pblock->hashPrevBlock);
+        if (mi == ::BlockIndex().end()) {
             return error("%s: %s prev block not found: %s.", __func__, hashBlock.GetHex(), pblock->hashPrevBlock.GetHex());
         }
 
-        if (!chainActive.Contains(mi->second)) {
+        if (!::ChainActive().Contains(mi->second)) {
             return error("%s: %s prev block in active chain: %s.", __func__, hashBlock.GetHex(), pblock->hashPrevBlock.GetHex());
         }
 
@@ -109,7 +108,7 @@ bool CheckStake(CBlock *pblock)
         if (!CheckProofOfStake(state, mi->second, *pblock->vtx[0], pblock->nTime, pblock->nBits, proofHash, hashTarget)) {
             return error("%s: proof-of-stake checking failed.", __func__);
         }
-        if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash()) { // hashbestchain
+        if (pblock->hashPrevBlock != ::ChainActive().Tip()->GetBlockHash()) { // hashbestchain
             return error("%s: Generated block is stale.", __func__);
         }
     }
@@ -139,7 +138,6 @@ bool ImportOutputs(CBlockTemplate *pblocktemplate, int nHeight)
     }
 
     fs::path fPath = GetDataDir() / "genesisOutputs.txt";
-
     if (!fs::exists(fPath)) {
         return error("%s: File not found 'genesisOutputs.txt'.", __func__);
     }
@@ -331,8 +329,8 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
         int num_blocks_of_peers, num_nodes;
         {
             LOCK(cs_main);
-            nBestHeight = chainActive.Height();
-            nBestTime = chainActive.Tip()->nTime;
+            nBestHeight = ::ChainActive().Height();
+            nBestTime = ::ChainActive().Tip()->nTime;
             num_blocks_of_peers = GetNumBlocksOfPeers();
             num_nodes = g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL);
         }
@@ -347,7 +345,7 @@ void ThreadStakeMiner(size_t nThreadID, std::vector<std::shared_ptr<CWallet>> &v
             }
         }
 
-        if (num_nodes == 0 || IsInitialBlockDownload()) {
+        if (num_nodes == 0 || ::ChainstateActive().IsInitialBlockDownload()) {
             fIsStaking = false;
             fTryToSync = true;
             LogPrint(BCLog::POS, "%s: IsInitialBlockDownload\n", __func__);

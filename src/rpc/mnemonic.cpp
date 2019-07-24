@@ -5,10 +5,8 @@
 
 #include <rpc/server.h>
 
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <rpc/util.h>
-#include <key.h>
 #include <key_io.h>
 #include <key/extkey.h>
 #include <random.h>
@@ -107,7 +105,6 @@ UniValue mnemonic(const JSONRPCRequest &request)
             if (!sstr) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid num bytes entropy");
             }
-
             if (nBytesEntropy < 16 || nBytesEntropy > 64) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Num bytes entropy out of range [16,64].");
             }
@@ -131,13 +128,11 @@ UniValue mnemonic(const JSONRPCRequest &request)
             if (0 != MnemonicEncode(nLanguage, vEntropy, sMnemonic, sError)) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicEncode failed %s.", sError.c_str()).c_str());
             }
-
             if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed)) {
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "MnemonicToSeed failed.");
             }
 
             ekMaster.SetSeed(&vSeed[0], vSeed.size());
-
             if (!ekMaster.IsValid()) {
                 continue;
             }
@@ -148,13 +143,13 @@ UniValue mnemonic(const JSONRPCRequest &request)
         result.pushKV("mnemonic", sMnemonic);
 
         if (fBip44) {
-            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY_BTC);
+            eKey58.SetKey(CExtKeyPair(ekMaster), CChainParams::EXT_SECRET_KEY_BTC);
             result.pushKV("master", eKey58.ToString());
 
             // m / purpose' / coin_type' / account' / change / address_index
             // path "44' Params().BIP44ID()
         } else {
-            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY);
+            eKey58.SetKey(CExtKeyPair(ekMaster), CChainParams::EXT_SECRET_KEY);
             result.pushKV("master", eKey58.ToString());
         }
 
@@ -195,7 +190,6 @@ UniValue mnemonic(const JSONRPCRequest &request)
         if (0 != MnemonicDecode(nLanguage, sMnemonic, vEntropy, sError)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("MnemonicDecode failed %s.", sError.c_str()).c_str());
         }
-
         if (0 != MnemonicToSeed(sMnemonic, sPassword, vSeed)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "MnemonicToSeed failed.");
         }
@@ -209,7 +203,7 @@ UniValue mnemonic(const JSONRPCRequest &request)
         }
 
         if (fBip44) {
-            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY_BTC);
+            eKey58.SetKey(CExtKeyPair(ekMaster), CChainParams::EXT_SECRET_KEY_BTC);
             result.pushKV("master", eKey58.ToString());
 
             // m / purpose' / coin_type' / account' / change / address_index
@@ -217,10 +211,10 @@ UniValue mnemonic(const JSONRPCRequest &request)
             ekMaster.Derive(ekDerived, BIP44_PURPOSE);
             ekDerived.Derive(ekDerived, Params().BIP44ID());
 
-            eKey58.SetKey(ekDerived, CChainParams::EXT_SECRET_KEY);
+            eKey58.SetKey(CExtKeyPair(ekDerived), CChainParams::EXT_SECRET_KEY);
             result.pushKV("derived", eKey58.ToString());
         } else {
-            eKey58.SetKey(ekMaster, CChainParams::EXT_SECRET_KEY);
+            eKey58.SetKey(CExtKeyPair(ekMaster), CChainParams::EXT_SECRET_KEY);
             result.pushKV("master", eKey58.ToString());
         }
 
@@ -257,11 +251,10 @@ UniValue mnemonic(const JSONRPCRequest &request)
         UniValue arrayWords(UniValue::VARR);
 
         std::string sWord, sError;
-        while (0 == MnemonicGetWord(nLanguage, nWords, sWord, sError))
-        {
+        while (0 == MnemonicGetWord(nLanguage, nWords, sWord, sError)) {
             arrayWords.push_back(sWord);
             nWords++;
-        };
+        }
 
         result.pushKV("words", arrayWords);
         result.pushKV("num_words", nWords);

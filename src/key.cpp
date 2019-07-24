@@ -5,7 +5,6 @@
 
 #include <key.h>
 
-#include <arith_uint256.h>
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
 #include <random.h>
@@ -164,6 +163,12 @@ void CKey::MakeNewKey(bool fCompressedIn) {
     fCompressed = fCompressedIn;
 }
 
+bool CKey::Negate()
+{
+    assert(fValid);
+    return secp256k1_ec_privkey_negate(secp256k1_context_sign, keydata.data());
+}
+
 CPrivKey CKey::GetPrivKey() const {
     assert(fValid);
     CPrivKey privkey;
@@ -195,7 +200,7 @@ uint256 CKey::ECDH(const CPubKey& pubkey) const {
     uint256 result;
     secp256k1_pubkey pkey;
     assert(secp256k1_ec_pubkey_parse(secp256k1_context_sign, &pkey, pubkey.begin(), pubkey.size()));
-    assert(secp256k1_ecdh(secp256k1_context_sign, result.begin(), &pkey, begin()));
+    assert(secp256k1_ecdh(secp256k1_context_sign, result.begin(), &pkey, begin(), nullptr, nullptr));
     return result;
 }
 

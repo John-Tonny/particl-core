@@ -79,14 +79,14 @@ static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // S
 //
 bool fDiscover = true;
 bool fListen = true;
-bool fRelayTxes = true;
+bool g_relay_txes = !DEFAULT_BLOCKSONLY;
 CCriticalSection cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
 static bool vfLimited[NET_MAX] GUARDED_BY(cs_mapLocalHost) = {};
 std::string strSubVersion;
 
 extern void DecMisbehaving(NodeId nodeid, int howmuch) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-extern void CheckNodeHeaders(NodeId nodeid, int64_t now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+extern void CheckUnreceivedHeaders(int64_t now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 void CConnman::AddOneShot(const std::string& strDest)
 {
@@ -1681,12 +1681,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
     }
 
-
-    if (!gArgs.GetBoolArg("-findpeers", true))
-    {
-        LogPrintf("%s: findpeers is negative, thread ending.\n", __func__);
+    if (!gArgs.GetBoolArg("-findpeers", true)) {
+        LogPrintf("%s: findpeers is unset, thread ending.\n", __func__);
         return;
-    };
+    }
 
     // Initiate network connections
     int64_t nStart = GetTime();
@@ -1994,9 +1992,9 @@ void CConnman::ThreadMessageHandler()
         int64_t nTimeNow = GetTime();
         if (nTimeNextBanReduced < nTimeNow) {
             LOCK(cs_main);
+            CheckUnreceivedHeaders(nTimeNow);
             for (auto *pnode : vNodesCopy) {
                 DecMisbehaving(pnode->id, 1);
-                CheckNodeHeaders(pnode->id, nTimeNow);
             }
             nTimeNextBanReduced = nTimeNow + nTimeDecBanThreshold;
         }
@@ -2063,7 +2061,7 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to %s on this computer. %s is probably already running."), addrBind.ToString(), _(PACKAGE_NAME));
+            strError = strprintf(_("Unable to bind to %s on this computer. %s is probably already running."), addrBind.ToString(), PACKAGE_NAME);
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
@@ -2315,8 +2313,8 @@ public:
         WSACleanup();
 #endif
     }
-}
-instance_of_cnetcleanup;
+};
+static CNetCleanup instance_of_cnetcleanup;
 
 void CConnman::Interrupt()
 {
@@ -2660,7 +2658,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
 {
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
-    strSubVer = "";
     hashContinue = uint256();
     filterInventoryKnown.reset();
     pfilter = MakeUnique<CBloomFilter>();

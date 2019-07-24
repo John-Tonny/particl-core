@@ -4,15 +4,10 @@
 
 #include <qt/test/rpcnestedtests.h>
 
-#include <chainparams.h>
-#include <consensus/validation.h>
-#include <fs.h>
 #include <interfaces/node.h>
-#include <validation.h>
-#include <rpc/register.h>
 #include <rpc/server.h>
 #include <qt/rpcconsole.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <univalue.h>
 #include <util/system.h>
 
@@ -38,7 +33,6 @@ void RPCNestedTests::rpcNestedTests()
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
     //mempool.setSanityCheck(1.0);
-
 
     TestingSetup test;
 

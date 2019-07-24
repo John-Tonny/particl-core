@@ -52,9 +52,11 @@ enum DataOutputTypes
     DO_DEV_FUND_CFWD        = 7,
     DO_FUND_MSG             = 8,
     DO_SMSG_FEE             = 9,
+    DO_SMSG_DIFFICULTY      = 10,
 };
 
 bool ExtractCoinStakeInt64(const std::vector<uint8_t> &vData, DataOutputTypes get_type, CAmount &out);
+bool ExtractCoinStakeUint32(const std::vector<uint8_t> &vData, DataOutputTypes get_type, uint32_t &out);
 
 inline bool IsParticlTxVersion(int nVersion)
 {
@@ -212,7 +214,7 @@ class CTxOutData;
 class CTxOutBase
 {
 public:
-    CTxOutBase(uint8_t v) : nVersion(v) {};
+    explicit CTxOutBase(uint8_t v) : nVersion(v) {};
     virtual ~CTxOutBase() {};
     uint8_t nVersion;
 
@@ -299,6 +301,7 @@ public:
     virtual bool SetCTFee(CAmount &nFee) { return false; };
     virtual bool GetDevFundCfwd(CAmount &nCfwd) const { return false; };
     virtual bool GetSmsgFeeRate(CAmount &nCfwd) const { return false; };
+    virtual bool GetSmsgDifficulty(uint32_t &compact) const { return false; };
 
     std::string ToString() const;
 };
@@ -487,7 +490,7 @@ class CTxOutData : public CTxOutBase
 {
 public:
     CTxOutData() : CTxOutBase(OUTPUT_DATA) {};
-    CTxOutData(const std::vector<uint8_t> &vData_) : CTxOutBase(OUTPUT_DATA), vData(vData_) {};
+    explicit CTxOutData(const std::vector<uint8_t> &vData_) : CTxOutBase(OUTPUT_DATA), vData(vData_) {};
 
     std::vector<uint8_t> vData;
 
@@ -528,6 +531,11 @@ public:
     bool GetSmsgFeeRate(CAmount &fee_rate) const override
     {
         return ExtractCoinStakeInt64(vData, DO_SMSG_FEE, fee_rate);
+    };
+
+    bool GetSmsgDifficulty(uint32_t &compact) const override
+    {
+        return ExtractCoinStakeUint32(vData, DO_SMSG_DIFFICULTY, compact);
     };
 
     std::vector<uint8_t> *GetPData() override
@@ -630,27 +638,26 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         s >> tx.vin;
 
         size_t nOutputs = ReadCompactSize(s);
-        tx.vpout.resize(nOutputs);
-        for (size_t k = 0; k < tx.vpout.size(); ++k) {
+        tx.vpout.clear();
+        tx.vpout.reserve(nOutputs);
+        for (size_t k = 0; k < nOutputs; ++k) {
             s >> bv;
-
             switch (bv) {
                 case OUTPUT_STANDARD:
-                    tx.vpout[k] = MAKE_OUTPUT<CTxOutStandard>();
+                    tx.vpout.push_back(MAKE_OUTPUT<CTxOutStandard>());
                     break;
                 case OUTPUT_CT:
-                    tx.vpout[k] = MAKE_OUTPUT<CTxOutCT>();
+                    tx.vpout.push_back(MAKE_OUTPUT<CTxOutCT>());
                     break;
                 case OUTPUT_RINGCT:
-                    tx.vpout[k] = MAKE_OUTPUT<CTxOutRingCT>();
+                    tx.vpout.push_back(MAKE_OUTPUT<CTxOutRingCT>());
                     break;
                 case OUTPUT_DATA:
-                    tx.vpout[k] = MAKE_OUTPUT<CTxOutData>();
+                    tx.vpout.push_back(MAKE_OUTPUT<CTxOutData>());
                     break;
                 default:
-                    return;
+                    throw std::ios_base::failure("Unknown transaction output type");
             }
-
             tx.vpout[k]->nVersion = bv;
             s >> *tx.vpout[k];
         }
@@ -692,6 +699,10 @@ inline void UnserializeTransaction(TxType& tx, Stream& s) {
         flags ^= 1;
         for (size_t i = 0; i < tx.vin.size(); i++) {
             s >> tx.vin[i].scriptWitness.stack;
+        }
+        if (!tx.HasWitness()) {
+            /* It's illegal to encode witnesses when all witness stacks are empty. */
+            throw std::ios_base::failure("Superfluous witness record");
         }
     }
     if (flags) {
@@ -875,7 +886,6 @@ public:
         if (vData.size() < 4) {
             return false;
         }
-
         memcpy(&height, &vData[0], 4);
         return true;
     }
@@ -885,7 +895,6 @@ public:
         if (vpout.size() < 2 || vpout[0]->nVersion != OUTPUT_DATA) {
             return false;
         }
-
         return vpout[0]->GetCTFee(nFee);
     }
 
@@ -894,7 +903,6 @@ public:
         if (vpout.size() < 1 || vpout[0]->nVersion != OUTPUT_DATA) {
             return false;
         }
-
         return vpout[0]->GetDevFundCfwd(nCfwd);
     }
 
@@ -903,8 +911,15 @@ public:
         if (vpout.size() < 1 || vpout[0]->nVersion != OUTPUT_DATA) {
             return false;
         }
-
         return vpout[0]->GetSmsgFeeRate(fee_rate);
+    }
+
+    bool GetSmsgDifficulty(uint32_t &compact) const
+    {
+        if (vpout.size() < 1 || vpout[0]->nVersion != OUTPUT_DATA) {
+            return false;
+        }
+        return vpout[0]->GetSmsgDifficulty(compact);
     }
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)

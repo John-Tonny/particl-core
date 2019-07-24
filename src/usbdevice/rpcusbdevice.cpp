@@ -1,32 +1,32 @@
-// Copyright (c) 2018 The Particl Core developers
+// Copyright (c) 2018-2019 The Particl Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <usbdevice/usbdevice.h>
-#include <usbdevice/debugdevice.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <rpc/rawtransaction_util.h>
 #include <util/strencodings.h>
 #include <key_io.h>
 #include <key/extkey.h>
 #include <chainparams.h>
-
-#include <univalue.h>
-
-#ifdef ENABLE_WALLET
-#include <wallet/hdwallet.h>
-#include <wallet/rpchdwallet.h>
-#include <wallet/rpcwallet.h>
-#endif
 #include <validation.h>
 #include <core_io.h>
 #include <primitives/transaction.h>
-#include <keystore.h>
 #include <policy/policy.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
+#include <txmempool.h>
+
+#ifdef ENABLE_WALLET
+#include <wallet/hdwallet.h>
+#include <wallet/rpcwallet.h>
+#endif
+
+#include <univalue.h>
 
 #include <memory>
 
@@ -77,8 +77,6 @@ static usb_device::CUSBDevice *SelectDevice(std::vector<std::unique_ptr<usb_devi
 
 static UniValue deviceloadmnemonic(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 2)
-        throw std::runtime_error(
             RPCHelpMan{"deviceloadmnemonic",
                 "\nStart mnemonic loader.\n",
                 {
@@ -90,7 +88,7 @@ static UniValue deviceloadmnemonic(const JSONRPCRequest &request)
             HelpExampleCli("deviceloadmnemonic", "")
             + HelpExampleRpc("deviceloadmnemonic", "")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::vector<std::unique_ptr<usb_device::CUSBDevice> > vDevices;
     usb_device::CUSBDevice *pDevice = SelectDevice(vDevices);
@@ -123,8 +121,6 @@ static UniValue deviceloadmnemonic(const JSONRPCRequest &request)
 
 static UniValue devicebackup(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
             RPCHelpMan{"devicebackup",
                 "\nStart device backup mnemonic generator.\n",
                 {
@@ -134,8 +130,7 @@ static UniValue devicebackup(const JSONRPCRequest &request)
             HelpExampleCli("devicebackup", "")
             + HelpExampleRpc("devicebackup", "")
                 },
-            }.ToString());
-
+            }.Check(request);
 
     std::vector<std::unique_ptr<usb_device::CUSBDevice> > vDevices;
     usb_device::CUSBDevice *pDevice = SelectDevice(vDevices);
@@ -153,8 +148,6 @@ static UniValue devicebackup(const JSONRPCRequest &request)
 
 static UniValue listdevices(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
             RPCHelpMan{"listdevices",
                 "\nList connected hardware devices.\n",
                 {
@@ -171,7 +164,7 @@ static UniValue listdevices(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listdevices", "")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::vector<std::unique_ptr<usb_device::CUSBDevice> > vDevices;
     ListAllDevices(vDevices);
@@ -205,8 +198,6 @@ static UniValue listdevices(const JSONRPCRequest &request)
 
 static UniValue promptunlockdevice(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
             RPCHelpMan{"promptunlockdevice",
                 "\nPrompt an unlock for the hardware device.\n",
                 {
@@ -221,7 +212,7 @@ static UniValue promptunlockdevice(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("promptunlockdevice", "")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::vector<std::unique_ptr<usb_device::CUSBDevice> > vDevices;
     usb_device::CUSBDevice *pDevice = SelectDevice(vDevices);
@@ -239,8 +230,6 @@ static UniValue promptunlockdevice(const JSONRPCRequest &request)
 
 static UniValue unlockdevice(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 2 || request.params.size() < 1)
-            throw std::runtime_error(
             RPCHelpMan{"unlockdevice",
                 "\nList connected hardware devices.\n",
                 {
@@ -257,34 +246,29 @@ static UniValue unlockdevice(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("unlockdevice", "\"mysecretpassword\" 1687")
                 },
-            }.ToString());
+            }.Check(request);
 
-    std::string passphraseword;
-    if (!passphraseword.length()) {
+    std::string passphraseword, pin, sError;
+    if (!request.params[0].isNull()) {
         passphraseword = request.params[0].get_str();
     }
-
-    std::string pin;
-    if (!pin.length()) {
+    if (!request.params[1].isNull()) {
         pin = request.params[1].get_str();
     }
-
     if (!pin.length() && !passphraseword.length()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, _("neither a pin or a passphraseword was provided."));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, _("Neither a pin nor a passphraseword was provided."));
     }
 
-    std::string sError;
     std::vector<std::unique_ptr<usb_device::CUSBDevice> > vDevices;
     ListAllDevices(vDevices);
 
     UniValue result(UniValue::VOBJ);
 
-    if(vDevices.size() > 1) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, _("too many hardware devices connected."));
+    if (vDevices.size() > 1) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, _("Too many hardware devices connected."));
     }
-
-    if(vDevices.size() != 1) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, _("no hardware devices connected."));
+    if (vDevices.size() != 1) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, _("No hardware devices connected."));
     }
 
     usb_device::CUSBDevice *device = vDevices[0].get();
@@ -299,8 +283,6 @@ static UniValue unlockdevice(const JSONRPCRequest &request)
 
 static UniValue getdeviceinfo(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
             RPCHelpMan{"getdeviceinfo",
                 "\nGet information from connected hardware device.\n",
                 {
@@ -314,7 +296,7 @@ static UniValue getdeviceinfo(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getdeviceinfo", "")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::vector<std::unique_ptr<usb_device::CUSBDevice> > vDevices;
     usb_device::CUSBDevice *pDevice = SelectDevice(vDevices);
@@ -330,8 +312,6 @@ static UniValue getdeviceinfo(const JSONRPCRequest &request)
 
 static UniValue getdevicepublickey(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
             RPCHelpMan{"getdevicepublickey",
                 "\nGet the public key and address at \"path\" from a hardware device.\n",
                 {
@@ -354,7 +334,7 @@ static UniValue getdevicepublickey(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getdevicepublickey", "\"0/0\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::vector<uint32_t> vPath;
     GetPath(vPath, request.params[0], request.params[1]);
@@ -375,7 +355,7 @@ static UniValue getdevicepublickey(const JSONRPCRequest &request)
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("publickey", HexStr(pk));
-    rv.pushKV("address", CBitcoinAddress(pk.GetID()).ToString());
+    rv.pushKV("address", CBitcoinAddress(PKHash(pk)).ToString());
     rv.pushKV("path", sPath);
 
     return rv;
@@ -383,8 +363,6 @@ static UniValue getdevicepublickey(const JSONRPCRequest &request)
 
 static UniValue getdevicexpub(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
             RPCHelpMan{"getdevicexpub",
                 "\nGet the extended public key at \"path\" from a hardware device.\n",
                 {
@@ -400,7 +378,7 @@ static UniValue getdevicexpub(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getdevicexpub", "\"0\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::vector<uint32_t> vPath;
     GetPath(vPath, request.params[0], request.params[1]);
@@ -419,8 +397,6 @@ static UniValue getdevicexpub(const JSONRPCRequest &request)
 
 static UniValue devicesignmessage(const JSONRPCRequest &request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
-        throw std::runtime_error(
             RPCHelpMan{"devicesignmessage",
                 "\nSign a message with the key at \"path\" on a hardware device.\n",
                 {
@@ -438,8 +414,7 @@ static UniValue devicesignmessage(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("devicesignmessage", "\"0/0\", \"my message\"")
                 },
-            }.ToString());
-
+            }.Check(request);
 
     std::vector<uint32_t> vPath;
     GetPath(vPath, request.params[0], request.params[2]);
@@ -470,8 +445,6 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
     }
     #endif
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 5)
-        throw std::runtime_error(
             RPCHelpMan{"devicesignrawtransaction",
                 "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
                 "The second optional argument (may be null) is an array of previous transaction outputs that\n"
@@ -528,7 +501,7 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("devicesignrawtransaction", "\"myhex\"")
                 },
-            }.ToString());
+            }.Check(request);
 
 #ifdef ENABLE_WALLET
     LOCK2(cs_main, pwallet ? &pwallet->cs_wallet : nullptr);
@@ -656,9 +629,9 @@ static UniValue devicesignrawtransaction(const JSONRPCRequest &request)
     }
 
 #ifdef ENABLE_WALLET
-    const CKeyStore& keystore = ((fGivenKeys || !pwallet) ? (CKeyStore&)tempKeystore : (CKeyStore&)*pwallet);
+    const FillableSigningProvider& keystore = ((fGivenKeys || !pwallet) ? (FillableSigningProvider&)tempKeystore : (FillableSigningProvider&)*pwallet);
 #else
-    const CKeyStore& keystore = tempKeystore;
+    const FillableSigningProvider& keystore = tempKeystore;
 #endif
 
     int nHashType = SIGHASH_ALL;
@@ -774,8 +747,6 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() > 5)
-        throw std::runtime_error(
             RPCHelpMan{"initaccountfromdevice",
                 "\nInitialise an extended key account from a hardware device." +
                 HelpRequiringPassphrase(pwallet) + "\n",
@@ -798,7 +769,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("initaccountfromdevice", "\"new_acc\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR, UniValue::VBOOL, UniValue::VNUM}, true);
 
@@ -857,7 +828,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
 
         CStoredExtKey *sekAccount = new CStoredExtKey();
         sekAccount->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
-        sekAccount->kp = ekp;
+        sekAccount->kp = CExtKeyPair(ekp);
         sekAccount->SetPath(vPath); // EKVT_PATH
 
         std::vector<uint8_t> vData;
@@ -882,7 +853,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
         std::vector<uint32_t> vChainPath;
         vChainPath.push_back(vPath.back()); // make relative to key before account
         CStoredExtKey *sekExternal = new CStoredExtKey();
-        sekExternal->kp = epExternal;
+        sekExternal->kp = CExtKeyPair(epExternal);
         vChainPath.push_back(nExternal);
         sekExternal->SetPath(vChainPath);
         sekExternal->nFlags |= EAF_ACTIVE | EAF_RECEIVE_ON | EAF_IN_ACCOUNT | EAF_HARDWARE_DEVICE;
@@ -891,7 +862,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
         sea->nActiveExternal = sea->NumChains();
 
         CStoredExtKey *sekInternal = new CStoredExtKey();
-        sekInternal->kp = epInternal;
+        sekInternal->kp = CExtKeyPair(epInternal);
         vChainPath.pop_back();
         vChainPath.push_back(nInternal);
         sekInternal->SetPath(vChainPath);
@@ -927,7 +898,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
             evStealthScan.SetSeed(vchSig.data(), vchSig.size());
 
             CStoredExtKey *sekStealthScan = new CStoredExtKey();
-            sekStealthScan->kp = evStealthScan;
+            sekStealthScan->kp = CExtKeyPair(evStealthScan);
             vSigPath.clear();
             // sekStealthScan isn't on the account chain
             sekStealthScan->nFlags |= EAF_ACTIVE | EAF_IN_ACCOUNT;
@@ -949,7 +920,7 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
             vPath.pop_back();
 
             CStoredExtKey *sekStealthSpend = new CStoredExtKey();
-            sekStealthSpend->kp = epStealthSpend;
+            sekStealthSpend->kp = CExtKeyPair(epStealthSpend);
             vChainPath.pop_back();
             vChainPath.push_back(nStealthSpend);
             sekStealthSpend->SetPath(vChainPath);
@@ -988,18 +959,22 @@ static UniValue initaccountfromdevice(const JSONRPCRequest &request)
                 throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("ExtKeySetDefaultAccount failed, %s.", ExtKeyGetString(rv)));
             }
         }
-
+        if (!pwallet->UnsetWalletFlagRV(&wdb, WALLET_FLAG_BLANK_WALLET)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "UnsetWalletFlag failed.");
+        }
         if (!wdb.TxnCommit()) {
             pwallet->idDefaultAccount = idOldDefault;
             pwallet->ExtKeyRemoveAccountFromMapsAndFree(sea);
             throw JSONRPCError(RPC_INTERNAL_ERROR, "TxnCommit failed.");
         }
-    } // pwallet->cs_wallet
+    }
 
     if (nScanFrom >= 0) {
         pwallet->RescanFromTime(nScanFrom, reserver, true /* update */);
         pwallet->MarkDirty();
-        pwallet->ReacceptWalletTransactions();
+        auto locked_chain = pwallet->chain().lock();
+        LOCK(pwallet->cs_wallet);
+        pwallet->ReacceptWalletTransactions(*locked_chain);
     }
 
     std::string sPath;
@@ -1024,8 +999,6 @@ static UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
-        throw std::runtime_error(
             RPCHelpMan{"devicegetnewstealthaddress",
                 "\nReturns a new Particl stealth address for receiving payments." +
                     HelpRequiringPassphrase(pwallet) + "\n",
@@ -1047,7 +1020,7 @@ static UniValue devicegetnewstealthaddress(const JSONRPCRequest &request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("devicegetnewstealthaddress", "\"lblTestSxAddrPrefix\", 3, \"0b101\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     EnsureWalletIsUnlocked(pwallet);
 

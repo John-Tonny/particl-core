@@ -43,10 +43,7 @@ enum class FeeReason {
     PAYTXFEE,
     FALLBACK,
     REQUIRED,
-    MAXTXFEE,
 };
-
-std::string StringForFeeReason(FeeReason reason);
 
 /* Used to determine type of fee estimation requested */
 enum class FeeEstimateMode {
@@ -54,9 +51,6 @@ enum class FeeEstimateMode {
     ECONOMICAL,   //!< Force estimateSmartFee to use non-conservative estimates
     CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
 };
-
-bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
-bool StringFromFeeMode(FeeEstimateMode fee_estimate_mode, std::string& mode_string);
 
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket

@@ -5,7 +5,7 @@
 #include <bench/bench.h>
 #include <coins.h>
 #include <policy/policy.h>
-#include <wallet/crypter.h>
+#include <script/signingprovider.h>
 #include <key/extkey.h>
 #include <key/stealth.h>
 
@@ -19,7 +19,7 @@
 // paid to a TX_PUBKEYHASH.
 //
 static std::vector<CMutableTransaction>
-SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
+SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet)
 {
     std::vector<CMutableTransaction> dummyTransactions;
     dummyTransactions.resize(2);
@@ -41,9 +41,9 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 
     dummyTransactions[1].vout.resize(2);
     dummyTransactions[1].vout[0].nValue = 21 * COIN;
-    dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(key[2].GetPubKey().GetID());
+    dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[2].GetPubKey()));
     dummyTransactions[1].vout[1].nValue = 22 * COIN;
-    dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(key[3].GetPubKey().GetID());
+    dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(PKHash(key[3].GetPubKey()));
     AddCoins(coinsRet, CTransaction(dummyTransactions[1]), 0);
 
     return dummyTransactions;
@@ -59,7 +59,7 @@ static void CCoinsCaching(benchmark::State& state)
 {
     fParticlMode = false;
 
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);

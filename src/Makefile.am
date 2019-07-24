@@ -121,7 +121,6 @@ BITCOIN_CORE_H = \
   chainparamsbase.h \
   chainparamsseeds.h \
   chainparamsimport.h \
-  checkpoints.h \
   checkqueue.h \
   clientversion.h \
   coins.h \
@@ -132,6 +131,7 @@ BITCOIN_CORE_H = \
   compat/sanity.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/tx_check.h \
   consensus/tx_verify.h \
   core_io.h \
   core_memusage.h \
@@ -141,6 +141,7 @@ BITCOIN_CORE_H = \
   httprpc.h \
   httpserver.h \
   index/base.h \
+  index/blockfilterindex.h \
   index/txindex.h \
   indirectmap.h \
   init.h \
@@ -167,7 +168,6 @@ BITCOIN_CORE_H = \
   key/wordlists/italian.h \
   key/wordlists/korean.h \
   key_io.h \
-  keystore.h \
   dbwrapper.h \
   limitedmap.h \
   logging.h \
@@ -179,6 +179,8 @@ BITCOIN_CORE_H = \
   netaddress.h \
   netbase.h \
   netmessagemaker.h \
+  node/coin.h \
+  node/psbt.h \
   node/transaction.h \
   noui.h \
   optional.h \
@@ -187,6 +189,7 @@ BITCOIN_CORE_H = \
   policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
+  policy/settings.h \
   pow.h \
   pos/kernel.h \
   pos/miner.h \
@@ -197,19 +200,21 @@ BITCOIN_CORE_H = \
   reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
-  rpc/mining.h \
   rpc/protocol.h \
-  rpc/server.h \
-  rpc/rpcutil.h \
-  rpc/rawtransaction.h \
+  rpc/rawtransaction_util.h \
   rpc/register.h \
+  rpc/request.h \
+  rpc/server.h \
   rpc/util.h \
+  rpc/rpcutil.h \
   scheduler.h \
   script/descriptor.h \
-  script/ismine.h \
+  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
+  script/signingprovider.h \
   script/standard.h \
+  script/ismine.h \
   shutdown.h \
   streams.h \
   smsg/db.h \
@@ -233,10 +238,16 @@ BITCOIN_CORE_H = \
   undo.h \
   util/bip32.h \
   util/bytevectorhash.h \
+  util/error.h \
+  util/fees.h \
   util/system.h \
   util/memory.h \
   util/moneystr.h \
+  util/rbf.h \
+  util/threadnames.h \
   util/time.h \
+  util/url.h \
+  util/validation.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -247,6 +258,8 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
+  wallet/ismine.h \
+  wallet/load.h \
   wallet/psbtwallet.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
@@ -256,6 +269,7 @@ BITCOIN_CORE_H = \
   wallet/coinselection.h \
   wallet/rpchdwallet.h \
   wallet/hdwalletdb.h \
+  wallet/hdwallettypes.h \
   wallet/hdwallet.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
@@ -280,38 +294,39 @@ obj/build.h: FORCE
 libparticl_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between bitcoind and bitcoin-qt
+# Contains code accessing mempool and chain state that is meant to be separated
+# from wallet and gui code (see node/README.md). Shared code should go in
+# libbitcoin_common or libbitcoin_util libraries, instead.
 libparticl_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libparticl_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
   banman.cpp \
-  bloom.cpp \
   blockencodings.cpp \
   blockfilter.cpp \
   chain.cpp \
-  checkpoints.cpp \
   consensus/tx_verify.cpp \
   flatfile.cpp \
   httprpc.cpp \
   httpserver.cpp \
   index/base.cpp \
+  index/blockfilterindex.cpp \
   index/txindex.cpp \
   interfaces/chain.cpp \
-  interfaces/handler.cpp \
   interfaces/node.cpp \
   init.cpp \
   dbwrapper.cpp \
-  merkleblock.cpp \
   miner.cpp \
   net.cpp \
   net_processing.cpp \
+  node/coin.cpp \
+  node/psbt.cpp \
   node/transaction.cpp \
   noui.cpp \
-  outputtype.cpp \
   policy/fees.cpp \
-  policy/policy.cpp \
   policy/rbf.cpp \
+  policy/settings.cpp \
   pow.cpp \
   pos/kernel.cpp \
   rest.cpp \
@@ -340,6 +355,9 @@ libparticl_server_a_SOURCES = \
   insight/rpc.cpp \
   $(BITCOIN_CORE_H)
 
+if ENABLE_WALLET
+libparticl_server_a_SOURCES += wallet/init.cpp
+endif
 if !ENABLE_WALLET
 libparticl_server_a_SOURCES += dummywallet.cpp
 endif
@@ -401,13 +419,15 @@ libparticl_wallet_a_SOURCES = \
   wallet/db.cpp \
   wallet/feebumper.cpp \
   wallet/fees.cpp \
-  wallet/init.cpp \
+  wallet/ismine.cpp \
+  wallet/load.cpp \
   wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/hdwallet.cpp \
+  wallet/hdwallettypes.cpp \
   wallet/hdwalletdb.cpp \
   wallet/rpchdwallet.cpp \
   blind.cpp \
@@ -430,13 +450,19 @@ crypto_libparticl_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libparticl_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
+  crypto/hkdf_sha256_32.cpp \
+  crypto/hkdf_sha256_32.h \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
+  crypto/poly1305.h \
+  crypto/poly1305.cpp \
   crypto/ripemd160.cpp \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
@@ -480,6 +506,7 @@ libparticl_consensus_a_SOURCES = \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
+  consensus/tx_check.cpp \
   consensus/validation.h \
   hash.cpp \
   hash.h \
@@ -512,6 +539,7 @@ libparticl_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libparticl_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
+  bloom.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
@@ -528,16 +556,20 @@ libparticl_common_a_SOURCES = \
   unilib/uninorms.cpp \
   unilib/utf8.cpp \
   key_io.cpp \
-  keystore.cpp \
+  merkleblock.cpp \
   netaddress.cpp \
   netbase.cpp \
+  outputtype.cpp \
   policy/feerate.cpp \
-  psbt.cpp \
+  policy/policy.cpp \
   protocol.cpp \
+  psbt.cpp \
+  rpc/rawtransaction_util.cpp \
+  rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
-  script/ismine.cpp \
   script/sign.cpp \
+  script/signingprovider.cpp \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
@@ -556,18 +588,25 @@ libparticl_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
+  interfaces/handler.cpp \
   logging.cpp \
   random.cpp \
-  rpc/protocol.cpp \
+  rpc/request.cpp \
   support/cleanse.cpp \
   sync.cpp \
   threadinterrupt.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
+  util/error.cpp \
+  util/fees.cpp \
   util/system.cpp \
   util/moneystr.cpp \
+  util/rbf.cpp \
+  util/threadnames.cpp \
   util/strencodings.cpp \
   util/time.cpp \
+  util/url.cpp \
+  util/validation.cpp \
   $(BITCOIN_CORE_H)
 
 
@@ -613,6 +652,8 @@ if TARGET_WINDOWS
 particld_SOURCES += bitcoind-res.rc
 endif
 
+# Libraries below may be listed more than once to resolve circular dependencies (see
+# https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 particld_LDADD = \
   $(LIBPARTICL_SERVER) \
   $(LIBPARTICL_WALLET) \
@@ -712,7 +753,7 @@ endif
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/particlconsensus.h
-libparticlconsensus_la_SOURCES = $(crypto_libparticl_crypto_base_a_SOURCES) $(libparticl_consensus_a_SOURCES)
+libparticlconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libparticl_crypto_base_a_SOURCES) $(libparticl_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libparticlconsensus_la_SOURCES += compat/glibc_compat.cpp
@@ -773,13 +814,13 @@ clean-local:
 check-symbols: $(bin_PROGRAMS)
 if GLIBC_BACK_COMPAT
 	@echo "Checking glibc back compat..."
-	$(AM_V_at) READELF=$(READELF) CPPFILT=$(CPPFILT) $(top_srcdir)/contrib/devtools/symbol-check.py < $(bin_PROGRAMS)
+	$(AM_V_at) READELF=$(READELF) CPPFILT=$(CPPFILT) $(PYTHON) $(top_srcdir)/contrib/devtools/symbol-check.py < $(bin_PROGRAMS)
 endif
 
 check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
-	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
+	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
 endif
 
 if ENABLE_BIP70

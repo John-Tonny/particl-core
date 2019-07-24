@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Particl Core developers
+# Copyright (c) 2017-2019 The Particl Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-import json
 
 from test_framework.test_particl import ParticlTestFramework
 from test_framework.util import assert_raises_rpc_error, connect_nodes_bi
@@ -34,7 +32,7 @@ class AnonTest(ParticlTestFramework):
         assert(nodes[0].getwalletinfo()['total_balance'] == 100000)
         txnHashes = []
 
-        ro = nodes[1].extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
+        nodes[1].extkeyimportmaster('drip fog service village program equip minute dentist series hawk crop sphere olympic lazy garbage segment fox library good alley steak jazz force inmate')
         sxAddrTo1_1 = nodes[1].getnewstealthaddress('lblsx11')
         assert(sxAddrTo1_1 == 'TetbYTGv5LiqyFiUD3a5HHbpSinQ9KiRYDGAMvRzPfz4RnHMbKGAwDr1fjLGJ5Eqg1XDwpeGyqWMiwdK3qM3zKWjzHNpaatdoHVzzA')
 
@@ -70,8 +68,8 @@ class AnonTest(ParticlTestFramework):
             self.log.info(h) # debug
             assert(self.wait_for_mempool(nodes[1], h))
 
-        assert('node0 -> node1 b->a 4' in json.dumps(nodes[1].listtransactions('*', 100), default=self.jsonDecimal))
-        assert('node0 -> node1 b->a 4' in json.dumps(nodes[0].listtransactions('*', 100), default=self.jsonDecimal))
+        assert('node0 -> node1 b->a 4' in self.dumpj(nodes[1].listtransactions('*', 100)))
+        assert('node0 -> node1 b->a 4' in self.dumpj(nodes[0].listtransactions('*', 100)))
 
         self.stakeBlocks(1)
 
@@ -120,7 +118,18 @@ class AnonTest(ParticlTestFramework):
         txnHash = nodes[1].sendtypeto('anon', 'part', outputs)
         txnHashes = [txnHash,]
 
+        self.log.info('Test filtertransactions with type filter')
+        ro = nodes[1].filtertransactions({ 'type': 'anon', 'count': 20 })
+        assert(len(ro) > 2)
+        for t in ro:
+            foundA = False
+            for o in t['outputs']:
+                if 'type' in o and o['type'] == 'anon':
+                    foundA = True
+                    break
+            assert((foundA is True) or (t['type_in'] == 'anon'))
 
+        self.log.info('Test unspent with address filter')
         unspent_filtered = nodes[1].listunspentanon(1, 9999, [sxAddrTo1_1])
         assert(unspent_filtered[0]['label'] == 'lblsx11')
 
@@ -141,6 +150,8 @@ class AnonTest(ParticlTestFramework):
         assert(len(nodes[1].listunspentanon()) == len(unspent))
         assert(nodes[1].lockunspent(True) == True)
 
+        ro = nodes[2].getblockstats(nodes[2].getblockchaininfo()['blocks'])
+        assert(ro['height'] == 2)
 
 
 if __name__ == '__main__':

@@ -29,6 +29,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
 {
     { "setmocktime", 0, "timestamp" },
     { "setmocktime", 1, "is_offset" },
+    { "utxoupdatepsbt", 1, "descriptors" },
     { "generatetoaddress", 0, "nblocks" },
     { "generatetoaddress", 2, "maxtries" },
     { "getnetworkhashps", 0, "nblocks" },
@@ -37,6 +38,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendtoaddress", 4, "subtractfeefromamount" },
     { "sendtoaddress", 6 , "replaceable" },
     { "sendtoaddress", 7 , "conf_target" },
+    { "sendtoaddress", 9, "avoid_reuse" },
     { "settxfee", 0, "amount" },
     { "sethdseed", 0, "newkeypool" },
     { "getreceivedbyaddress", 1, "minconf" },
@@ -49,6 +51,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listreceivedbylabel", 2, "include_watchonly" },
     { "getbalance", 1, "minconf" },
     { "getbalance", 2, "include_watchonly" },
+    { "getbalance", 3, "avoid_reuse" },
     { "getblockhash", 0, "height" },
     { "waitforblockheight", 0, "height" },
     { "waitforblockheight", 1, "timeout" },
@@ -96,8 +99,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "signrawtransactionwithkey", 2, "prevtxs" },
     { "signrawtransactionwithwallet", 1, "prevtxs" },
     { "sendrawtransaction", 1, "allowhighfees" },
+    { "sendrawtransaction", 1, "maxfeerate" },
     { "testmempoolaccept", 0, "rawtxs" },
     { "testmempoolaccept", 1, "allowhighfees" },
+    { "testmempoolaccept", 1, "maxfeerate" },
     { "testmempoolaccept", 2, "ignorelocks" },
     { "combinerawtransaction", 0, "txs" },
     { "fundrawtransaction", 1, "options" },
@@ -145,6 +150,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setban", 2, "bantime" },
     { "setban", 3, "absolute" },
     { "setnetworkactive", 0, "state" },
+    { "setwalletflag", 1, "value" },
     { "getmempoolancestors", 1, "verbose" },
     { "getmempooldescendants", 1, "verbose" },
     { "getblockhashes", 0 , "high"},
@@ -212,7 +218,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "buildscript", 0, "json" },
     { "createsignaturewithwallet", 1, "prevtx" },
     { "createsignaturewithkey", 1, "prevtx" },
-
+    { "createsignaturewithwallet", 4, "options" },
+    { "createsignaturewithkey", 4, "options" },
 
 
     { "walletsettings", 1, "json" },
@@ -252,15 +259,20 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "generatematchingblindfactor", 1, "outputs" },
 
 
-
     { "smsgsend", 3, "paid_msg" },
     { "smsgsend", 4, "days_retention" },
     { "smsgsend", 5, "testfee" },
     { "smsgsend", 6, "fromfile" },
     { "smsgsend", 7, "decodehex" },
+    { "smsgsend", 8, "submitmsg" },
+    { "smsgsend", 9, "savemsg" },
     { "smsg", 1, "options" },
+    { "smsgimport", 1, "options" },
     { "smsginbox", 2, "options" },
     { "smsgoutbox", 2, "options" },
+    { "smsggetfeerate", 0, "height" },
+    { "smsggetdifficulty", 0, "time" },
+
 
     { "devicesignrawtransaction", 1, "prevtxs" },
     { "devicesignrawtransaction", 2, "privkeypaths" },
@@ -287,6 +299,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "rescanblockchain", 1, "stop_height"},
     { "createwallet", 1, "disable_private_keys"},
     { "createwallet", 2, "blank"},
+    { "createwallet", 4, "avoid_reuse"},
     { "getnodeaddresses", 0, "count"},
     { "stop", 0, "wait" },
 };

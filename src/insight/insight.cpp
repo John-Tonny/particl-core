@@ -4,13 +4,21 @@
 
 #include <insight/insight.h>
 #include <insight/addressindex.h>
+#include <insight/spentindex.h>
+#include <insight/timestampindex.h>
 #include <validation.h>
 #include <txdb.h>
 #include <txmempool.h>
+#include <uint256.h>
+#include <script/script.h>
 
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <util/system.h>
+
+bool fAddressIndex = false;
+bool fTimestampIndex = false;
+bool fSpentIndex = false;
 
 bool ExtractIndexInfo(const CScript *pScript, int &scriptType, std::vector<uint8_t> &hashBytes)
 {
@@ -86,9 +94,9 @@ bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value)
 
 bool HashOnchainActive(const uint256 &hash)
 {
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    CBlockIndex* pblockindex = ::BlockIndex()[hash];
 
-    if (!chainActive.Contains(pblockindex)) {
+    if (!::ChainActive().Contains(pblockindex)) {
         return false;
     }
 

@@ -22,9 +22,9 @@
 bool getAddressFromIndex(const int &type, const uint256 &hash, std::string &address)
 {
     if (type == ADDR_INDT_SCRIPT_ADDRESS) {
-        address = CBitcoinAddress(CScriptID(uint160(hash.begin(), 20))).ToString();
+        address = CBitcoinAddress(ScriptHash(uint160(hash.begin(), 20))).ToString();
     } else if (type == ADDR_INDT_PUBKEY_ADDRESS) {
-        address = CBitcoinAddress(CKeyID(uint160(hash.begin(), 20))).ToString();
+        address = CBitcoinAddress(PKHash(uint160(hash.begin(), 20))).ToString();
     } else if (type == ADDR_INDT_SCRIPT_ADDRESS_256) {
         address = CBitcoinAddress(CScriptID256(hash)).ToString();
     } else if (type == ADDR_INDT_PUBKEY_ADDRESS_256) {
@@ -85,8 +85,6 @@ bool timestampSort(std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> a,
 
 UniValue getaddressmempool(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"getaddressmempool",
                 "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n",
                 {
@@ -114,7 +112,7 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getaddressmempool", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
                 },
-        }.ToString());
+        }.Check(request);
 
     if (!fAddressIndex) {
         throw JSONRPCError(RPC_MISC_ERROR, "Address index is not enabled.");
@@ -160,8 +158,6 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
 
 UniValue getaddressutxos(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
         RPCHelpMan{"getaddressutxos",
                 "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n",
                 {
@@ -189,7 +185,7 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getaddressutxos", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
                 },
-        }.ToString());
+        }.Check(request);
 
     if (!fAddressIndex) {
         throw JSONRPCError(RPC_MISC_ERROR, "Address index is not enabled.");
@@ -240,8 +236,8 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
         result.pushKV("utxos", utxos);
 
         LOCK(cs_main);
-        result.pushKV("hash", chainActive.Tip()->GetBlockHash().GetHex());
-        result.pushKV("height", (int)chainActive.Height());
+        result.pushKV("hash", ::ChainActive().Tip()->GetBlockHash().GetHex());
+        result.pushKV("height", (int)::ChainActive().Height());
         return result;
     } else {
         return utxos;
@@ -250,8 +246,6 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
 
 UniValue getaddressdeltas(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
-        throw std::runtime_error(
             RPCHelpMan{"getaddressdeltas",
                 "\nReturns all changes for an address (requires addressindex to be enabled).\n",
                 {
@@ -280,7 +274,7 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getaddressdeltas", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
                 },
-        }.ToString());
+        }.Check(request);
 
     if (!fAddressIndex) {
         throw JSONRPCError(RPC_MISC_ERROR, "Address index is not enabled.");
@@ -352,12 +346,12 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
     if (includeChainInfo && start > 0 && end > 0) {
         LOCK(cs_main);
 
-        if (start > chainActive.Height() || end > chainActive.Height()) {
+        if (start > ::ChainActive().Height() || end > ::ChainActive().Height()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Start or end is outside chain range");
         }
 
-        CBlockIndex* startIndex = chainActive[start];
-        CBlockIndex* endIndex = chainActive[end];
+        CBlockIndex* startIndex = ::ChainActive()[start];
+        CBlockIndex* endIndex = ::ChainActive()[end];
 
         UniValue startInfo(UniValue::VOBJ);
         UniValue endInfo(UniValue::VOBJ);
@@ -380,8 +374,6 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
 
 UniValue getaddressbalance(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"getaddressbalance",
                 "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n",
                 {
@@ -402,7 +394,7 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getaddressbalance", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
                 },
-        }.ToString());
+        }.Check(request);
 
     if (!fAddressIndex) {
         throw JSONRPCError(RPC_MISC_ERROR, "Address index is not enabled.");
@@ -441,8 +433,6 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
 
 UniValue getaddresstxids(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"getaddresstxids",
                 "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n",
                 {
@@ -465,7 +455,7 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getaddresstxids", "{\"addresses\": [\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\"]}")
                 },
-        }.ToString());
+        }.Check(request);
 
     if (!fAddressIndex) {
         throw JSONRPCError(RPC_MISC_ERROR, "Address index is not enabled.");
@@ -529,25 +519,21 @@ UniValue getaddresstxids(const JSONRPCRequest& request)
 
 UniValue getspentinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
-        throw std::runtime_error(
             RPCHelpMan{"getspentinfo",
                 "\nReturns the txid and index where an output is spent.\n",
                 {
-                    {"inputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of json objects",
+                    {"inputs", RPCArg::Type::OBJ, RPCArg::Optional::NO, "",
                         {
-                            {
-                                {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the txid."},
-                                {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The start block height."},
-                            },
+                            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the txid."},
+                            {"index", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number."},
                         },
                     },
                 },
                 RPCResult{
             "{\n"
-            "  \"txid\"  (string) The transaction id\n"
+            "  \"txid\"   (string) The transaction id\n"
             "  \"index\"  (number) The spending input index\n"
-            "  ,...\n"
+            "  \"height\" (number) The height of the block containing the spending tx\n"
             "}\n"
                 },
                 RPCExamples{
@@ -555,7 +541,7 @@ UniValue getspentinfo(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getspentinfo", "{\"txid\": \"0437cd7f8525ceed2324359c2d0ba26006d92d856a9c20fa0241106ee5a597c9\", \"index\": 0}")
                 },
-        }.ToString());
+        }.Check(request);
 
     UniValue txidValue = find_value(request.params[0].get_obj(), "txid");
     UniValue indexValue = find_value(request.params[0].get_obj(), "index");
@@ -586,11 +572,11 @@ static void AddAddress(CScript *script, UniValue &uv)
 {
     if (script->IsPayToScriptHash()) {
         std::vector<unsigned char> hashBytes(script->begin()+2, script->begin()+22);
-        uv.pushKV("address", EncodeDestination(CScriptID(uint160(hashBytes))));
+        uv.pushKV("address", EncodeDestination(ScriptHash(uint160(hashBytes))));
     } else
     if (script->IsPayToPublicKeyHash()) {
         std::vector<unsigned char> hashBytes(script->begin()+3, script->begin()+23);
-        uv.pushKV("address", EncodeDestination(CKeyID(uint160(hashBytes))));
+        uv.pushKV("address", EncodeDestination(PKHash(uint160(hashBytes))));
     } else
     if (script->IsPayToScriptHash256()) {
         std::vector<unsigned char> hashBytes(script->begin()+2, script->begin()+34);
@@ -608,8 +594,8 @@ static UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blocki
     result.pushKV("hash", block.GetHash().GetHex());
     int confirmations = -1;
     // Only report confirmations if the block is on the main chain
-    if (chainActive.Contains(blockindex)) {
-        confirmations = chainActive.Height() - blockindex->nHeight + 1;
+    if (::ChainActive().Contains(blockindex)) {
+        confirmations = ::ChainActive().Height() - blockindex->nHeight + 1;
     } else {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block is an orphan");
     }
@@ -644,9 +630,9 @@ static UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blocki
 
                 if (GetSpentIndex(spentKey, spentInfo)) {
                     if (spentInfo.addressType == ADDR_INDT_PUBKEY_ADDRESS) {
-                        delta.pushKV("address", EncodeDestination(CKeyID(uint160(spentInfo.addressHash.begin(), 20))));
+                        delta.pushKV("address", EncodeDestination(PKHash(uint160(spentInfo.addressHash.begin(), 20))));
                     } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS)  {
-                        delta.pushKV("address", EncodeDestination(CScriptID(uint160(spentInfo.addressHash.begin(), 20))));
+                        delta.pushKV("address", EncodeDestination(ScriptHash(uint160(spentInfo.addressHash.begin(), 20))));
                     } else if (spentInfo.addressType == ADDR_INDT_PUBKEY_ADDRESS_256) {
                         delta.pushKV("address", EncodeDestination(CKeyID256(spentInfo.addressHash)));
                     } else if (spentInfo.addressType == ADDR_INDT_SCRIPT_ADDRESS_256)  {
@@ -725,7 +711,7 @@ static UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blocki
 
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
-    CBlockIndex *pnext = chainActive.Next(blockindex);
+    CBlockIndex *pnext = ::ChainActive().Next(blockindex);
     if (pnext)
         result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
     return result;
@@ -733,21 +719,30 @@ static UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blocki
 
 static UniValue getblockdeltas(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error("getblockdeltas <blockhash>\n");
-    }
+    RPCHelpMan{"getblockdeltas",
+        "\nReturns block deltas.\n",
+        {
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+        },
+        RPCResults{},
+        RPCExamples{
+        HelpExampleCli("getblockdeltas", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"") +
+        "\nAs a JSON-RPC call\n"
+        + HelpExampleRpc("getblockdeltas", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+        },
+    }.Check(request);
 
     LOCK(cs_main);
 
     std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
 
-    if (mapBlockIndex.count(hash) == 0) {
+    if (::BlockIndex().count(hash) == 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
     CBlock block;
-    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    CBlockIndex* pblockindex = ::BlockIndex()[hash];
 
     if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Block not available (pruned data)");
@@ -762,8 +757,6 @@ static UniValue getblockdeltas(const JSONRPCRequest& request)
 
 static UniValue getblockhashes(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2)
-        throw std::runtime_error(
             RPCHelpMan{"getblockhashes",
                 "\nReturns array of hashes of blocks within the timestamp range provided.\n",
                 {
@@ -792,7 +785,7 @@ static UniValue getblockhashes(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getblockhashes", "1231614698, 1231024505")
                 },
-        }.ToString());
+        }.Check(request);
 
     unsigned int high = request.params[0].get_int();
     unsigned int low = request.params[1].get_int();
@@ -842,8 +835,6 @@ static UniValue getblockhashes(const JSONRPCRequest& request)
 
 UniValue gettxoutsetinfobyscript(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
             RPCHelpMan{"gettxoutsetinfobyscript",
                 "\nReturns statistics about the unspent transaction output set per script type.\n"
                 "This call may take some time.\n",
@@ -860,20 +851,20 @@ UniValue gettxoutsetinfobyscript(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("gettxoutsetinfobyscript", "")
                 },
-        }.ToString());
+        }.Check(request);
 
     UniValue ret(UniValue::VOBJ);
 
     int nHeight;
     uint256 hashBlock;
 
-    FlushStateToDisk();
+    ::ChainstateActive().ForceFlushStateToDisk();
     std::unique_ptr<CCoinsViewCursor> pcursor(pcoinsdbview->Cursor());
 
     hashBlock = pcursor->GetBestBlock();
     {
         LOCK(cs_main);
-        nHeight = mapBlockIndex.find(hashBlock)->second->nHeight;
+        nHeight = ::BlockIndex().find(hashBlock)->second->nHeight;
     }
 
     class PerScriptTypeStats {
@@ -914,15 +905,13 @@ UniValue gettxoutsetinfobyscript(const JSONRPCRequest& request)
             else if (coin.out.scriptPubKey.IsPayToScriptHash256_CS() || coin.out.scriptPubKey.IsPayToScriptHash_CS() )
                 ps = &statsCSSH;
 
-            if (coin.nType == OUTPUT_STANDARD)
-            {
+            if (coin.nType == OUTPUT_STANDARD) {
                 ps->nPlain++;
                 ps->nPlainValue += coin.out.nValue;
             } else
-            if (coin.nType == OUTPUT_CT)
-            {
+            if (coin.nType == OUTPUT_CT) {
                 ps->nBlinded++;
-            };
+            }
         } else {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
@@ -970,8 +959,6 @@ static void pushScript(UniValue &uv, const std::string &name, const CScript *scr
 
 UniValue getblockreward(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"getblockreward",
                 "\nReturns the blockreward for block at height.\n",
                 {
@@ -1007,7 +994,7 @@ UniValue getblockreward(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getblockreward", "1000")
                 },
-        }.ToString());
+        }.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
 
@@ -1016,13 +1003,13 @@ UniValue getblockreward(const JSONRPCRequest& request)
     }
 
     int nHeight = request.params[0].get_int();
-    if (nHeight < 0 || nHeight > chainActive.Height()) {
+    if (nHeight < 0 || nHeight > ::ChainActive().Height()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
     }
 
     LOCK(cs_main);
 
-    CBlockIndex *pblockindex = chainActive[nHeight];
+    CBlockIndex *pblockindex = ::ChainActive()[nHeight];
 
     CAmount stake_reward = 0;
     if (pblockindex->pprev) {
@@ -1112,8 +1099,6 @@ UniValue getblockreward(const JSONRPCRequest& request)
 
 UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw std::runtime_error(
             RPCHelpMan{"listcoldstakeunspent",
                 "\nReturns the unspent outputs of \"stakeaddress\" at height.\n",
                 {
@@ -1141,7 +1126,7 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("listcoldstakeunspent", "\"Pb7FLL3DyaAVP2eGfRiEkj4U8ZJ3RHLY9g\", 1000")
                 },
-            }.ToString());
+            }.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VNUM}, true);
 
@@ -1154,9 +1139,9 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 
     ColdStakeIndexLinkKey seek_key;
     CTxDestination stake_dest = DecodeDestination(request.params[0].get_str(), true);
-    if (stake_dest.type() == typeid(CKeyID)) {
+    if (stake_dest.type() == typeid(PKHash)) {
         seek_key.m_stake_type = TX_PUBKEYHASH;
-        CKeyID id = boost::get<CKeyID>(stake_dest);
+        PKHash id = boost::get<PKHash>(stake_dest);
         memcpy(seek_key.m_stake_id.begin(), id.begin(), 20);
     } else
     if (stake_dest.type() == typeid(CKeyID256)) {
@@ -1172,7 +1157,7 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 
     int height = !request.params[1].isNull() ? request.params[1].get_int() : -1;
     if (height == -1) {
-        height = chainActive.Tip()->nHeight;
+        height = ::ChainActive().Tip()->nHeight;
     }
 
     bool mature_only = false;
@@ -1236,7 +1221,7 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 
                     switch (lk.m_spend_type) {
                         case TX_PUBKEYHASH: {
-                            CKeyID idk;
+                            PKHash idk;
                             memcpy(idk.begin(), lk.m_spend_id.begin(), 20);
                             output.pushKV("addrspend", EncodeDestination(idk));
                             }
@@ -1245,7 +1230,7 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
                             output.pushKV("addrspend", EncodeDestination(lk.m_spend_id));
                             break;
                         case TX_SCRIPTHASH: {
-                            CScriptID ids;
+                            ScriptHash ids;
                             memcpy(ids.begin(), lk.m_spend_id.begin(), 20);
                             output.pushKV("addrspend", EncodeDestination(ids));
                             }
@@ -1273,8 +1258,6 @@ UniValue listcoldstakeunspent(const JSONRPCRequest& request)
 
 UniValue getindexinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 0)
-        throw std::runtime_error(
             RPCHelpMan{"getindexinfo",
                 "\nReturns an object of enabled indices.\n",
                 {
@@ -1293,7 +1276,7 @@ UniValue getindexinfo(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("getindexinfo", "")
                 },
-        }.ToString());
+        }.Check(request);
 
     UniValue ret(UniValue::VOBJ);
 

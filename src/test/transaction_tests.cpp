@@ -1,27 +1,30 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/data/tx_invalid.json.h>
 #include <test/data/tx_valid.json.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <clientversion.h>
 #include <checkqueue.h>
-#include <consensus/tx_verify.h>
+#include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key.h>
-#include <key/extkey.h>
-#include <key/stealth.h>
-#include <keystore.h>
 #include <validation.h>
 #include <policy/policy.h>
+#include <policy/settings.h>
 #include <script/script.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <script/script_error.h>
 #include <script/standard.h>
+#include <streams.h>
 #include <util/strencodings.h>
+
+#include <key/extkey.h>
+#include <key/stealth.h>
 
 #include <map>
 #include <string>
@@ -293,7 +296,7 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 // paid to a TX_PUBKEYHASH.
 //
 static std::vector<CMutableTransaction>
-SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
+SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet)
 {
     std::vector<CMutableTransaction> dummyTransactions;
     dummyTransactions.resize(2);
@@ -316,9 +319,9 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 
     dummyTransactions[1].vout.resize(2);
     dummyTransactions[1].vout[0].nValue = 21*CENT;
-    dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(key[2].GetPubKey().GetID());
+    dummyTransactions[1].vout[0].scriptPubKey = GetScriptForDestination(PKHash(key[2].GetPubKey()));
     dummyTransactions[1].vout[1].nValue = 22*CENT;
-    dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(key[3].GetPubKey().GetID());
+    dummyTransactions[1].vout[1].scriptPubKey = GetScriptForDestination(PKHash(key[3].GetPubKey()));
     AddCoins(coinsRet, CTransaction(dummyTransactions[1]), 0);
 
     return dummyTransactions;
@@ -326,7 +329,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 
 BOOST_AUTO_TEST_CASE(test_Get)
 {
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
@@ -350,7 +353,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     BOOST_CHECK_EQUAL(coins.GetValueIn(CTransaction(t1)), (50+21+22)*CENT);
 }
 
-static void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
+static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
 {
     CMutableTransaction outputm;
     outputm.nVersion = 1;
@@ -429,7 +432,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     CKey key;
     key.MakeNewKey(true); // Need to use compressed keys in segwit or the signing will fail
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKeyPubKey(key, key.GetPubKey()));
     CKeyID hash = key.GetPubKey().GetID();
     CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
@@ -521,7 +524,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
 {
     std::vector<uint8_t> vchAmount(8);
 
-    CBasicKeyStore keystore, keystore2;
+    FillableSigningProvider keystore, keystore2;
     CKey key1, key2, key3, key1L, key2L;
     CPubKey pubkey1, pubkey2, pubkey3, pubkey1L, pubkey2L;
     key1.MakeNewKey(true);
@@ -577,8 +580,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
 
     // P2SH pay-to-compressed-pubkey.
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey1)), output1, input1);
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey2)), output2, input2);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(scriptPubkey1)), output1, input1);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(scriptPubkey2)), output2, input2);
     ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1);
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
@@ -602,8 +605,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
 
     // P2SH witness pay-to-compressed-pubkey (v0).
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey1))), output1, input1);
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey2))), output2, input2);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey1))), output1, input1);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey2))), output2, input2);
     ReplaceRedeemScript(input2.vin[0].scriptSig, GetScriptForWitness(scriptPubkey1));
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
@@ -627,8 +630,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
 
     // P2SH pay-to-uncompressed-pubkey.
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey1L)), output1, input1);
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey2L)), output2, input2);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(scriptPubkey1L)), output1, input1);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(scriptPubkey2L)), output2, input2);
     ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1L);
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
@@ -644,8 +647,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey2L), output2, input2, false);
 
     // Signing disabled for P2SH witness pay-to-uncompressed-pubkey (v1).
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey1L))), output1, input1, false);
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey2L))), output2, input2, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey1L))), output1, input1, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey2L))), output2, input2, false);
 
     // Normal 2-of-2 multisig
     CreateCreditAndSpend(keystore, scriptMulti, output1, input1, false);
@@ -657,10 +660,10 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
     // P2SH 2-of-2 multisig
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptMulti)), output1, input1, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(scriptMulti)), output1, input1, false);
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, false);
-    CreateCreditAndSpend(keystore2, GetScriptForDestination(CScriptID(scriptMulti)), output2, input2, false);
+    CreateCreditAndSpend(keystore2, GetScriptForDestination(ScriptHash(scriptMulti)), output2, input2, false);
     CheckWithFlag(output2, input2, 0, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, false);
     BOOST_CHECK(*output1 == *output2);
@@ -681,10 +684,10 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
     // P2SH witness 2-of-2 multisig
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptMulti))), output1, input1, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptMulti))), output1, input1, false);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
-    CreateCreditAndSpend(keystore2, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptMulti))), output2, input2, false);
+    CreateCreditAndSpend(keystore2, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptMulti))), output2, input2, false);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
     BOOST_CHECK(*output1 == *output2);
@@ -696,7 +699,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     LOCK(cs_main);
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
     std::vector<CMutableTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
@@ -710,7 +713,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     t.vout[0].nValue = 90*CENT;
     CKey key;
     key.MakeNewKey(true);
-    t.vout[0].scriptPubKey = GetScriptForDestination(key.GetPubKey().GetID());
+    t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
     std::string reason;
     BOOST_CHECK(IsStandardTx(CTransaction(t), reason));

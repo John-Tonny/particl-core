@@ -13,7 +13,6 @@
 #include <streams.h>
 #include <univalue.h>
 #include <util/system.h>
-#include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <insight/spentindex.h>
 #include <blind.h>
@@ -245,6 +244,10 @@ void OutputToJSON(uint256 &txid, int i,
             }
             if (s->GetSmsgFeeRate(nValue)) {
                 entry.pushKV("smsgfeerate", ValueFromAmount(nValue));
+            }
+            uint32_t difficulty;
+            if (s->GetSmsgDifficulty(difficulty)) {
+                entry.pushKV("smsgdifficulty", strprintf("%08x", difficulty));
             }
             }
             break;
